@@ -1,0 +1,14 @@
+body {
+  margin-top: 100px;
+  font-family: 'EB Garamond', serif;
+  text-align: center;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Gill Sans", "Gill Sans MT", GillSans, Calibri, "Trebuchet MS", sans-serif;
+  font-weight: 400;
+}
