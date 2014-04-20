@@ -15,15 +15,53 @@ VIZ.requiresData([
   var ANNOTATIONS = [
     {
       time: '2014/02/03 05:00',
-      text: 'Service starts at 5AM on Monday morning'
+      text: 'Service starts at 5AM on Monday morning. Time continues downward <br> \u25BE'
     },
     {
       time: '2014/02/03 11:30',
       text: 'After the morning rush-hour subsides, everything runs smoothly throughout the middle of the day'
     },
     {
+      time: '2014/02/03 17:00',
+      text: 'A slow train leaving JFK/UMASS Station at 5PM causes delays on trains after (below) it for over an hour',
+      connections: [{
+        start: '2014/02/03 17:02',
+        stop: '2014/02/03 18:07',
+        station: 'JFK',
+        line: 'red'
+      }]
+    },
+    {
+      time: '2014/02/03 18:20',
+      text: 'Service to Bowdoin stops at 6:20PM',
+      connections: [{
+        start: '2014/02/03 18:20',
+        stop: '2014/02/03 18:26',
+        station: 'Bowdoin',
+        line: 'blue'
+      }]
+    },
+    {
       time: '2014/02/04 01:30',
-      text: 'The last trains of the night finish their trips around 1:30AM on Tuesday'
+      text: 'The last trains of the night finish around 1:30AM'
+    },
+    {
+      time: '2014/02/04 02:30',
+      text: 'At night, trains are moved between stations',
+      connections: [
+        {
+          start: '2014/02/04 01:56',
+          stop: '2014/02/04 02:03',
+          station: 'Orient Heights',
+          line: 'blue'
+        },
+        {
+          start: '2014/02/04 03:59',
+          stop: '2014/02/04 04:25',
+          station: 'JFK',
+          line: 'red'
+        }
+      ]
     },
     {
       time: '2014/02/04 05:15',
@@ -269,8 +307,8 @@ VIZ.requiresData([
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
     var svgBackground = svg.appendOnce('g', 'background');
     var svg = svg.appendOnce('g', 'foreground');
-    var annotationContainer = svg.appendOnce('g', 'annotations')
-        .attr('transform', 'translate(' + (width + 10) + ',0)');
+    var annotationContainer = outerSvg.appendOnce('g', 'annotations')
+        .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
 
     var xScale = d3.scale.linear()
         .domain(xExtent)
@@ -281,19 +319,9 @@ VIZ.requiresData([
         maxUnixSeconds
       ]).range([15, height]).clamp(true);
 
-    var annotations = annotationContainer.selectAll('.annotation').data(ANNOTATIONS);
-    var text = annotations
-        .enter()
-      .append('g')
-        .attr('class', 'annotation')
-      .append('text')
-        .attr('dy', 0)
-        .text(function (d) { return d.text; })
-        .call(VIZ.wrap, margin.right - 20);
-
-    annotations.attr('transform', function (d) {
-      return 'translate(0,' + (yScale(moment(d.time + ' -0500', 'YYYY/MM/DD HH:mm ZZ').valueOf() / 1000)) + ')';
-    });
+    annotationContainer.selectAll('text, text tspan')
+        .attr('x', width + 15)
+        .attr('y', function (d) { return yScale(moment(d.time + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000); });
 
 
     var timeScale = d3.time.scale()
@@ -308,6 +336,44 @@ VIZ.requiresData([
     keys.forEach(function (key) {
       stationXScaleInvert[header[key][0]] = key;
     });
+
+    var annotations = annotationContainer.selectAll('.annotation').data(ANNOTATIONS);
+    annotations
+        .enter()
+      .append('g')
+        .attr('class', 'annotation')
+      .append('text')
+        .text(function (d) { return d.text; })
+        .call(VIZ.wrap, margin.right - 20);
+
+    var connections = annotations.selectAll('.annotation-connection')
+        .data(function (d) { return (d.connections || []).map(function (c) { c.parent = d; return c; }); });
+
+    connections.enter()
+      .append('path')
+        .attr('class', 'annotation-connection');
+
+    // Draw annotation lines
+    connections
+        .attr('d', function (connection) {
+          var station = network.nodes.find(function (station) { return new RegExp(connection.station, 'i').test(station.name); })
+          var annotationY = yScale(moment(connection.parent.time + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000) - 4;
+          var connectionStartY = yScale(moment(connection.start + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000);
+          var connectionEndY = yScale(moment(connection.stop + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000);
+          var connectionX = xScale(header[station.id + '|' + connection.line][0]);
+          return 'M' + [
+            [
+              [width + 10, annotationY],
+              [connectionX + 3, (connectionStartY + connectionEndY) / 2]
+            ],
+            [
+              [connectionX, connectionStartY],
+              [connectionX + 3, connectionStartY],
+              [connectionX + 3, connectionEndY],
+              [connectionX, connectionEndY]
+            ]
+          ].map(function (segment) { return segment.map(function (point) { return point.map(Math.round).join(','); }).join('L'); }).join('M');
+        });
 
     var stations = svg.selectAll('.station')
         .data(nodesPerLine, function (d) { return d; });

@@ -69,16 +69,17 @@
           lineNumber = 0,
           lineHeight = 1.1, // ems
           y = text.attr("y") || 0,
+          x = text.attr("x") || 0,
           dy = parseFloat(text.attr("dy") || 0),
-          tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+          tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
       while (word = words.pop()) {
         line.push(word);
         tspan.text(line.join(" "));
-        if (tspan.node().getComputedTextLength() > width) {
+        if (tspan.node().getComputedTextLength() > width || word === '<br>') {
           line.pop();
           tspan.text(line.join(" "));
-          line = [word];
-          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+          line = word !== '<br>' ? [word] : [];
+          tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
         }
       }
     });
