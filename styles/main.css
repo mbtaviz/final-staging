@@ -60,6 +60,9 @@ path.orange {
   stroke: #E87200;
   fill: none;
 }
+.ios .hide-on-ios {
+  display: none;
+}
 .placeholder rect {
   fill: none;
   stroke: black;

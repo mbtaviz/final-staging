@@ -465,8 +465,8 @@ VIZ.requiresData([
 
     container.on('mousemove', selectTime);
     container.on('mousemove.titles', updateTitle);
-    var barBackground = svgBackground.appendOnce('g', 'g-bar');
-    var barForeground = svg.appendOnce('g', 'g-bar');
+    var barBackground = svgBackground.appendOnce('g', 'g-bar hide-on-ios');
+    var barForeground = svg.appendOnce('g', 'g-bar hide-on-ios');
     barBackground.appendOnce('line', 'bar')
         .attr('x1', 1)
         .attr('x2', width)
