@@ -319,10 +319,6 @@ VIZ.requiresData([
         maxUnixSeconds
       ]).range([15, height]).clamp(true);
 
-    annotationContainer.selectAll('text, text tspan')
-        .attr('x', width + 15)
-        .attr('y', function (d) { return yScale(moment(d.time + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000); });
-
 
     var timeScale = d3.time.scale()
       .domain([new Date(minUnixSeconds * 1000), new Date(maxUnixSeconds * 1000)])
@@ -374,6 +370,10 @@ VIZ.requiresData([
             ]
           ].map(function (segment) { return segment.map(function (point) { return point.map(Math.round).join(','); }).join('L'); }).join('M');
         });
+
+    annotationContainer.selectAll('text, text tspan')
+        .attr('x', width + 15)
+        .attr('y', function (d) { return yScale(moment(d.time + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000); });
 
     var stations = svg.selectAll('.station')
         .data(nodesPerLine, function (d) { return d; });
@@ -585,8 +585,6 @@ VIZ.requiresData([
       d3.select(window)
           .on("scroll.fixed-left", scrolled)
           .call(afterresized);
-    } else {
-      VIZ.placeholder(d3.select(".marey"), pageWidth(), 2000, 'data grid');
     }
   }());
 });

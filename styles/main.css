@@ -242,7 +242,8 @@ path.orange {
 }
 .marey line.station {
   stroke-width: 1px;
-  stroke: gray;
+  stroke: black;
+  stroke-opacity: 0.1;
   shape-rendering: crispEdges;
 }
 .marey .mareystop {
@@ -256,7 +257,7 @@ path.orange {
 .marey line.station.place-ogmnl-orange {
   stroke-width: 1px;
   stroke: black;
-  opacity: 0.75;
+  stroke-opacity: 0.35;
 }
 .marey .text-background {
   fill: white;
