@@ -9,7 +9,129 @@
   <link href='styles/main.css' rel='stylesheet' type='text/css'>
 </head>
 <body>
-  <h1>A Month in the Life of the MBTA</h1>
-  <p>Coming April 2014, check back soon!</p>
+
+  <!-- Header -->
+  <div class="full-width header">
+    <div class="container">
+      <div class="graphic">
+      </div>
+      <div class="caption">
+        <h1>A Month in the Life of the MBTA</h1>
+        <p class="subtitle">
+          An exploration of ridership and the trains of Boston
+        </p>
+        <p class="authors">
+          Michael Barry &amp; Brian Card
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="full-width section-intro">
+    <div class="container">
+      <p>Boston’s Massachusetts Bay Transit Authority (MBTA) operates the 4th busiest subway system in the U.S. after New York, Washington, and Chicago.  If you live in or around the city you have probably ridden on it.  You may remember subway rides that were slow, cars that were crowded, or everything going smoothly.  When you get off the train, however, you lose sight of the subway until you need to ride it again.  It’s hard to know if you left at a different time if the trains would be less crowded or what the experience is like on the other side of the system.</p>
+      <p>The MBTA publishes a substantial amount of subway data.  They provide the full schedule in General Transit Feed Specification (GTFS) format which powers Google’s transit directions.  They also publish realtime train locations for the Red, Orange, and Blue lines (but not Green or Silver).  We captured this realtime data for the entire month of February, 2014.  Also, working with the MBTA, we were able to acquire per-minute entry and exit counts at each station measured at the turnstiles used for payment.</p>
+      <p>We attempt to present this information to help people in Boston better understand the trains, how people use the trains, and how the people and trains interact with each other.</p>
+    </div>
+  </div>
+
+  <!-- The Trains -->
+  <div class="full-width section-trains">
+    <div class="container">
+      <h2>The Trains</h2>
+
+      <p>In a typical weekday, trains make approximately 1150 trips on the red, orange, and blue lines starting at 5AM and continuing through 1AM the next morning.  On Saturdays trains make 870 trips and on Sundays they make 760.</p>
+
+      <div class="table-inset">
+        <div class="table-caption">Average Number of Trips per Day</div>
+        <table class="table">
+          <thead>
+            <tr><th>Line</th><th>Weekdays</th><th>Saturdays</th><th>Sundays</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Red</td><td>450</td><td>320</td><td>380</td></tr>
+            <tr><td>Orange</td><td>350</td><td>260</td><td>260</td></tr>
+            <tr><td>Blue</td><td>300</td><td>220</td><td>240</td></tr>
+            <tr class="total"><td>Total</td><td>1150</td><td>870</td><td>760</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The visualization below shows all of these trips that trains took on the red, orange, and blue lines on February TBD, 2014. Each vertical line represents a station, and time extends from top to bottom.  Steeper lines indicate slower trains.  This visualization was first used by Étienne-Jules Marey and is typically called a “Marey Diagram”</p>
+    </div>
+  </div>
+
+  <!-- Marey -->
+  <div class="full-width marey-container">
+    <div class="fixed-left"></div>
+    <div class="marey"></div>
+  </div>
+
+  <div class="full-width lined-up-marey-container">
+    <div class="container">
+      <p>To better compare these individual trips, we line up the starting points and you can see the range of fastest to slowest trips, as well as variation. (describe a couple of notable trips, where hovering over them dims all of the others)</p>
+
+      <!-- Lined-up Marey -->
+      <div class="placeholder lined-up-marey"></div>
+
+    </div>
+  </div>
+
+  <!-- The People -->
+  <div class="full-width section-people">
+    <div class="container">
+      <h2>The People</h2>
+      <p>In a typical weekday, over 400,000 people enter a station along the red, orange, or blue lines.  On Saturdays and holidays that number drops to 230,000 and on Sundays it drops to 160,000.  The busiest day was Friday February 7 when 470,187 people entered the system.</p>
+      <p>This shows the total number of entries and exits for the red, orange, and blue line for every hour over the entire month. You can see weekends and holidays, as well as daily peaks around rush hour.  Our exit data is unreliable since not all stations measure require that people exit through a turnstile.</p>
+      <div class="placeholder turnstile-total"></div>
+      
+      <!-- Render a single row of the turnstile heatmap for sum of all stations -->
+      <p>The busiest stations are all along the Red Line.  Harvard topped the list, followed closely by South Station, and then Downtown Crossing.  The graphic below shows turnstile entries over time across all stations.</p>
+
+      <!-- Render the turnstile heatmap, sortable by position along the line or entries/decreasing -->
+      <div class="placeholder turnstile-all"></div>
+
+    </div>
+  </div>
+
+  <!-- The Interaction -->
+  <div class="full-width section-people-trains">
+    <div class="container">
+      <h2>How People and Trains Affect Each Other</h2>
+      <p>When you look back at the Marey diagram, the slope of each line tells you how fast a train is going and the time it takes to get between stations.  When all of the start and stop times are lined up you can see a drastic variation in the time it takes to get between stops throughout the day.  If you have ever ridden the subway during rush hour then you have experienced what the steep lines in the Marey diagram feel like first-hand.</p>
+      <p>What causes these delays?  It’s hard to know for sure, but what we can determine is that delays usually happen when more people are riding the subway.  The next visualization shows this correlation.</p>
+      
+      <!-- figure out a graphic here that shows correllation between crowds and delay -->
+      <div class="placeholder interaction-all"></div>
+      
+      <p>But how do these crowds and delay typically affect you on your commute?  Choose the two stations you typically commute between on a line</p>
+      
+      <!-- figure out graphic here that shows variation on someone's commute -->
+      <div class="placeholder interaction-specific"></div>
+
+    </div>
+  </div>
+
+  <!-- The Conclusion -->
+  <div class="full-width section-conclusion">
+    <div class="container">
+      <h2>Summary</h2>
+      <p>Through publicly available data, we have the tools to understand the subway system better than we ever have before.  We have seen how the system operates on a daily basis, how people use the system and how that affects the trains, and how the trains and people affect you.</p>
+      <p>Through our analysis and the realtime data feeds, you can also take these insights with you whenever you ride the train.  Bookmark <a href="https://mbta.meteor.com" target="_blank">mbta.meteor.com</a> on your mobile phone phone and you can check it any time to see up-to-the-minute congestion and delay information.</p>
+    </div>
+  </div>
+
+  <!-- The Code -->
+  <script type="text/javascript" src="bower_components/moment/moment.js"></script>
+  <script type="text/javascript" src="bower_components/underscore/underscore.js"></script>
+  <script type="text/javascript" src="bower_components/d3/d3.min.js"></script>
+  <script type="text/javascript" src="bower_components/d3-tip/index.js"></script>
+  <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="scripts/first.js"></script>
+  <script type="text/javascript" src="scripts/files.js"></script>
+  <script type="text/javascript" src="scripts/dataloader.js"></script>
+  <script type="text/javascript" src="scripts/header.js"></script>
+  <script type="text/javascript" src="scripts/marey.js"></script>
 </body>
 </html>
