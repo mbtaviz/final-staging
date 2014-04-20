@@ -266,6 +266,9 @@ path.orange {
 .marey path.active {
   stroke-width: 2px;
 }
+.marey .annotation {
+  font-family: 'EB Garamond', serif;
+}
 circle.hoverable {
   stroke-opacity: 0;
 }

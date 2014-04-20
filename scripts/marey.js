@@ -11,6 +11,27 @@ VIZ.requiresData([
   d3.select(".marey").text('Error loading train data').style('text-align', 'center');
 }).done(function (network, spider, trips, header) {
   "use strict";
+
+  var ANNOTATIONS = [
+    {
+      time: '2014/02/03 05:00',
+      text: 'Service starts at 5AM on Monday morning'
+    },
+    {
+      time: '2014/02/03 11:30',
+      text: 'After the morning rush-hour subsides, everything runs smoothly throughout the middle of the day'
+    },
+    {
+      time: '2014/02/04 01:30',
+      text: 'The last trains of the night finish their trips around 1:30AM on Tuesday'
+    },
+    {
+      time: '2014/02/04 05:15',
+      text: 'At 5AM on Tuesday, the cycle begins again'
+    }
+  ];
+
+
   var fixedLeft = d3.select(".fixed-left");
   var mapSvg = fixedLeft.append('svg');
   var marey = d3.select(".marey").text('').style('text-align', 'left').append('svg');
@@ -100,7 +121,7 @@ VIZ.requiresData([
 
 
   function renderSideMap(svgContainer, outerWidth, outerHeight) {
-    var margin = {top: 10, right: 10, bottom: 10, left: 10};
+    var margin = {top: 10, right: 30, bottom: 10, left: 10};
     var xRange = d3.extent(network.nodes, function (d) { return d.x; });
     var yRange = d3.extent(network.nodes, function (d) { return d.y; });
     var width = outerWidth - margin.left - margin.right,
@@ -108,8 +129,7 @@ VIZ.requiresData([
     var xScale = width / (xRange[1] - xRange[0]);
     var yScale = height / (yRange[1] - yRange[0]);
     var scale = Math.min(xScale, yScale);
-    margin.left = (outerWidth - scale * (xRange[1] - xRange[0])) / 2;
-    margin.right = (outerWidth - scale * (xRange[1] - xRange[0])) / 2;
+    margin.left = (outerWidth - scale * (xRange[1] - xRange[0])) * margin.left / (margin.left + margin.right);
     margin.top = (outerHeight - scale * (yRange[1] - yRange[0])) / 3;
     network.nodes.forEach(function (data) {
       data.pos = [data.x * scale, data.y * scale];
@@ -233,21 +253,13 @@ VIZ.requiresData([
     timeDisplay.text(moment(unixSeconds * 1000).format('h:mm a'));
   }
 
-  // TODO
-  // - why are extra paths showing up
-  // - adjustments
-  // - max width
-  // - bar
-  // - click
-  // - annotations
-
   var xExtent = d3.extent(d3.values(header), function (d) { return d[0]; });
   var minUnixSeconds = d3.min(d3.values(trips), function (d) { return d.begin; });
   var maxUnixSeconds = d3.max(d3.values(trips), function (d) { return d.end; });
   function renderMarey(outerSvg, outerWidth) {
     outerWidth = Math.round(outerWidth);
-    var margin = {top: 0, right: 10, bottom: 0, left: 60};
-    var outerHeight = 5500;
+    var margin = {top: 0, right: 200, bottom: 0, left: 60};
+    var outerHeight = 3500;
     var width = outerWidth - margin.left - margin.right,
         height = outerHeight - margin.top - margin.bottom;
     outerSvg.attr('width', outerWidth)
@@ -257,6 +269,8 @@ VIZ.requiresData([
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
     var svgBackground = svg.appendOnce('g', 'background');
     var svg = svg.appendOnce('g', 'foreground');
+    var annotationContainer = svg.appendOnce('g', 'annotations')
+        .attr('transform', 'translate(' + (width + 10) + ',0)');
 
     var xScale = d3.scale.linear()
         .domain(xExtent)
@@ -266,6 +280,22 @@ VIZ.requiresData([
         minUnixSeconds,
         maxUnixSeconds
       ]).range([15, height]).clamp(true);
+
+    var annotations = annotationContainer.selectAll('.annotation').data(ANNOTATIONS);
+    var text = annotations
+        .enter()
+      .append('g')
+        .attr('class', 'annotation')
+      .append('text')
+        .attr('dy', 0)
+        .text(function (d) { return d.text; })
+        .call(VIZ.wrap, margin.right - 20);
+
+    annotations.attr('transform', function (d) {
+      return 'translate(0,' + (yScale(moment(d.time + ' -0500', 'YYYY/MM/DD HH:mm ZZ').valueOf() / 1000)) + ')';
+    });
+
+
     var timeScale = d3.time.scale()
       .domain([new Date(minUnixSeconds * 1000), new Date(maxUnixSeconds * 1000)])
       .range([15, height]);
@@ -322,6 +352,7 @@ VIZ.requiresData([
     var lineMapping = d3.svg.line()
       .x(function(d) { return d[0]; })
       .y(function(d) { return d[1]; })
+      .defined(function (d) { return d !== null; })
       .interpolate("linear");
 
     // draw a line for each trip
@@ -333,9 +364,9 @@ VIZ.requiresData([
           // special case: place-nqncy, place-jfk -> place-nqncy, place-asmnl (at same time), place-jfk
           var result;
           if (last && last.stop === 'place-jfk' && stop.stop === 'place-nqncy') {
-            result = [{stop: 'place-asmnl', time: last.time}, stop];
+            result = [null, {stop: 'place-asmnl', time: last.time}, stop];
           } else if (last && last.stop === 'place-nqncy' && stop.stop === 'place-jfk') {
-            result = [{stop: 'place-asmnl', time: stop.time}, stop];
+            result = [{stop: 'place-asmnl', time: stop.time}, null, stop];
           } else {
             result = [stop];
           }
@@ -343,6 +374,7 @@ VIZ.requiresData([
           return result;
         });
         var points = _.flatten(stops).map(function (stop) {
+          if (!stop) { return null; }
           var y = yScale(stop.time);
           var x = xScale(header[stop.stop + '|' + d.line][0]);
           return [x, y];
