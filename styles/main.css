@@ -1,3 +1,49 @@
+html {
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+nav,
+section,
+summary {
+  display: block;
+}
+a {
+  background: transparent;
+  text-decoration: none;
+  color: steelBlue;
+}
+a:active,
+a:hover {
+  color: brown;
+  outline: 0;
+}
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+img {
+  border: 0;
+}
+svg:not(:root) {
+  overflow: hidden;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+td,
+th {
+  padding: 0;
+}
 body {
   margin: 0 0;
   width: 100%;
@@ -28,13 +74,6 @@ svg {
   max-width: 780px;
   margin: 0 auto;
   padding: 0 1em;
-}
-a {
-  text-decoration: none;
-  color: steelBlue;
-}
-a:hover {
-  color: brown;
 }
 .full-width {
   margin-bottom: 5em;
