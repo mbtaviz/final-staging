@@ -18,12 +18,29 @@ VIZ.requiresData([
       text: 'Service starts at 5AM on Monday morning. Time continues downward <br> \u25BE'
     },
     {
+      time: '2014/02/03 05:45',
+      text: 'Since the red line splits, we show the Ashmont branch first then the Braintree branch.  Trains on the Braintree branch "jump over" the Ashmont branch.',
+      connections: [{
+        time: '2014/02/03 05:40',
+        station: 'ashmont',
+        line: 'red'
+      }]
+    },
+    {
+      time: '2014/02/03 06:30',
+      text: 'Train frequency increases around 6:30AM as morning rush hour begins.'
+    },
+    {
       time: '2014/02/03 11:30',
       text: 'After the morning rush-hour subsides, everything runs smoothly throughout the middle of the day'
     },
     {
+      time: '2014/02/03 15:30',
+      text: 'The afternoon rush hour begins around 3:30PM'
+    },
+    {
       time: '2014/02/03 17:00',
-      text: 'A slow train leaving JFK/UMASS Station at 5PM causes delays on trains after (below) it for over an hour',
+      text: 'A slow train leaving JFK/UMASS Station at 5PM causes delays on trains after (below) it for over an hour.  Notice how this causes delays in the other direction as well, as trains immediately arrive at Alewife then turn around to go south.',
       connections: [{
         start: '2014/02/03 17:02',
         stop: '2014/02/03 18:07',
@@ -35,11 +52,14 @@ VIZ.requiresData([
       time: '2014/02/03 18:20',
       text: 'Service to Bowdoin stops at 6:20PM',
       connections: [{
-        start: '2014/02/03 18:20',
-        stop: '2014/02/03 18:26',
+        time: '2014/02/03 18:20',
         station: 'Bowdoin',
         line: 'blue'
       }]
+    },
+    {
+      time: '2014/02/03 19:00',
+      text: 'Normal service resumes for the evening starting around 7PM'
     },
     {
       time: '2014/02/04 01:30',
@@ -288,7 +308,7 @@ VIZ.requiresData([
         .attr('cx', function (d) { return d.pos[0]; })
         .attr('cy', function (d) { return d.pos[1]; });
     trains.exit().remove();
-    timeDisplay.text(moment(unixSeconds * 1000).format('h:mm a'));
+    timeDisplay.text(moment(unixSeconds * 1000).format('ddd h:mm a'));
   }
 
   var xExtent = d3.extent(d3.values(header), function (d) { return d[0]; });
@@ -356,19 +376,23 @@ VIZ.requiresData([
           var annotationY = yScale(moment(connection.parent.time + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000) - 4;
           var connectionStartY = yScale(moment(connection.start + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000);
           var connectionEndY = yScale(moment(connection.stop + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000);
+          var connectionSingleY = yScale(moment(connection.time + ' -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000);
           var connectionX = xScale(header[station.id + '|' + connection.line][0]);
           return 'M' + [
             [
               [width + 10, annotationY],
-              [connectionX + 3, (connectionStartY + connectionEndY) / 2]
+              [
+                connection.time ? connectionX : connectionX + 3,
+                connection.time ? connectionSingleY : (connectionStartY + connectionEndY) / 2
+              ]
             ],
-            [
+            !connection.time ? [
               [connectionX, connectionStartY],
               [connectionX + 3, connectionStartY],
               [connectionX + 3, connectionEndY],
               [connectionX, connectionEndY]
-            ]
-          ].map(function (segment) { return segment.map(function (point) { return point.map(Math.round).join(','); }).join('L'); }).join('M');
+            ] : null
+          ].filter(function (d) { return !!d }).map(function (segment) { return segment.map(function (point) { return point.map(Math.round).join(','); }).join('L'); }).join('M');
         });
 
     annotationContainer.selectAll('text, text tspan')

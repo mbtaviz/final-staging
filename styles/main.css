@@ -1,9 +1,13 @@
 body {
   margin: 0 0;
   width: 100%;
-  font-family: 'EB Garamond', serif;
+  font-family: Georgia, Garamond, serif;
+  font-size: 14px;
   font-weight: normal;
   color: #333;
+}
+p {
+  line-height: 1.3em;
 }
 h1,
 h2,
@@ -11,12 +15,11 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Gill Sans", "Gill Sans MT", GillSans, Calibri, "Trebuchet MS", sans-serif;
-  font-weight: 400;
+  font-family: Helvetica, Arial, sans-serif;
 }
 svg {
-  font-family: "Gill Sans", "Gill Sans MT", GillSans, Calibri, "Trebuchet MS", sans-serif;
-  font-size: 12px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 11px;
 }
 .full-width {
   width: 100%;
@@ -126,7 +129,7 @@ path.orange {
   left: 100%;
 }
 .table {
-  font-family: "Gill Sans", "Gill Sans MT", GillSans, Calibri, "Trebuchet MS", sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   border-spacing: 0px;
   margin: 0 auto;
   font-size: 14px;
@@ -170,17 +173,56 @@ path.orange {
 }
 .header .container {
   position: relative;
-  box-sizing: border-box;
 }
 .header .caption {
   position: absolute;
+  text-align: center;
   bottom: 0;
   left: 0;
   right: 0;
+  padding: 0 15px;
+}
+.header .caption p {
+  margin: 5px 0;
 }
 .header .graphic {
   position: absolute;
   top: 0;
+}
+.header .sign {
+  max-width: 600px;
+  border: 1px solid #888;
+  margin: 10px auto 0 auto;
+  border-radius: 3px;
+}
+.header .sign .sign-top {
+  background-color: #E12D27;
+  letter-spacing: 1px;
+  color: white;
+}
+.header .sign .sign-bottom {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+.header .sign h1,
+.header .sign h2 {
+  margin: 0;
+}
+@media (max-width: 630px) {
+  .sign h1 {
+    font-size: 24px;
+  }
+  .sign h2 {
+    font-size: 20px;
+  }
+}
+@media (max-width: 530px) {
+  .sign h1 {
+    font-size: 20px;
+  }
+  .sign h2 {
+    font-size: 16px;
+  }
 }
 .fixed-left {
   left: 0;
@@ -271,8 +313,9 @@ path.orange {
   stroke-width: 2px;
 }
 .marey .annotation {
-  font-family: 'EB Garamond', serif;
+  font-family: Georgia, Garamond, serif;
   font-size: 14px;
+  font-size: 12px;
 }
 .marey .annotation-connection {
   stroke: black;
