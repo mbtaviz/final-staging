@@ -28,15 +28,18 @@ VIZ.requiresData([
     },
     {
       time: '2014/02/03 06:30',
-      text: 'Train frequency increases around 6:30AM as morning rush hour begins.'
+      text: 'Train frequency increases around 6:30AM as morning rush hour begins.',
+      id: 'marey-morning-rush'
     },
     {
       time: '2014/02/03 11:30',
-      text: 'After the morning rush-hour subsides, everything runs smoothly throughout the middle of the day'
+      text: 'After the morning rush-hour subsides, everything runs smoothly throughout the middle of the day',
+      id: 'marey-midday-lull'
     },
     {
       time: '2014/02/03 15:30',
-      text: 'The afternoon rush hour begins around 3:30PM'
+      text: 'The afternoon rush hour begins around 3:30PM',
+      id: 'marey-evening-rush'
     },
     {
       time: '2014/02/03 17:00',
@@ -59,7 +62,8 @@ VIZ.requiresData([
     },
     {
       time: '2014/02/03 19:00',
-      text: 'Normal service resumes for the evening starting around 7PM'
+      text: 'Normal service resumes for the evening starting around 7PM',
+      id: 'marey-evening-lull'
     },
     {
       time: '2014/02/04 01:30',
@@ -91,14 +95,38 @@ VIZ.requiresData([
 
 
   var fixedLeft = d3.select(".fixed-left");
-  var mapSvg = fixedLeft.append('svg');
+  var mapSvg = fixedLeft.select('.side-map').append('svg');
   var marey = d3.select(".marey").text('').style('text-align', 'left').append('svg');
-  var container = d3.select('.marey-container');
+  var container = d3.select('.marey-container').classed('loading', false);
   var idToNode = {};
   var idToLine = {};
   var radius = 2.5;
   var timeDisplay;
   var showingMap;
+  var highlightedLinedUpMarey = null;
+
+  fixedLeft.selectAll('.scrollto')
+    .on('click', function (d) {
+      var id = d3.select(this).attr('data-dest');
+      var body = $('html, body');
+      body.animate({scrollTop:$("#" + id).offset().top}, '300', 'swing');
+      d3.event.preventDefault();
+    });
+  fixedLeft.selectAll('.highlight')
+    .on('click', function (d) {
+      d3.event.preventDefault();
+    })
+    .on('mouseover', function () {
+      var line = d3.select(this).attr('data-line');
+      var others = _.without(['red', 'orange', 'blue'], line);
+      others.forEach(function (other) {
+        container.selectAll('.' + other + ', .' + other + '-dimmable, circle.middle').classed('line-dimmed', true);
+      });
+    })
+    .on('mouseout', function () {
+      container.selectAll('.line-dimmed').classed('line-dimmed', false);
+    });
+
   network.nodes.forEach(function (data) {
     data.x = spider[data.id][0];
     data.y = spider[data.id][1];
@@ -168,34 +196,34 @@ VIZ.requiresData([
       titles[title] = true;
       titles[title.replace(/\|.*/, '')] = true;
     }
+    var stationLabels = marey.selectAll('text.station-label');
     stationLabels.style('display', function (d) {
       var display = end[d] || titles[d];
       return display ? null : 'none';
     });
-    d3.selectAll('text.station-label').classed('active', function (d) {
+    stationLabels.classed('active', function (d) {
       return titles[d.id ? d.id : d];
     });
   };
 
 
   function renderSideMap(svgContainer, outerWidth, outerHeight) {
-    var margin = {top: 10, right: 30, bottom: 10, left: 10};
+    var margin = {top: 30, right: 30, bottom: 10, left: 10};
     var xRange = d3.extent(network.nodes, function (d) { return d.x; });
     var yRange = d3.extent(network.nodes, function (d) { return d.y; });
     var width = outerWidth - margin.left - margin.right,
-        height = outerHeight - margin.top - margin.bottom;
+        height = Math.max(outerHeight - margin.top - margin.bottom - $('.side-caption').height() - 20, 100);
     var xScale = width / (xRange[1] - xRange[0]);
     var yScale = height / (yRange[1] - yRange[0]);
     var scale = Math.min(xScale, yScale);
-    margin.left = (outerWidth - scale * (xRange[1] - xRange[0])) * margin.left / (margin.left + margin.right);
-    margin.top = (outerHeight - scale * (yRange[1] - yRange[0])) / 3;
     network.nodes.forEach(function (data) {
       data.pos = [data.x * scale, data.y * scale];
     });
     var endDotRadius = 0.2 * scale;
+    d3.select('.fixed-left').style('width', outerWidth + 'px');
     var svg = svgContainer
-        .attr('width', outerWidth)
-        .attr('height', outerHeight)
+        .attr('width', scale * (xRange[1] - xRange[0]) + margin.left + margin.right)
+        .attr('height', scale * (yRange[1] - yRange[0]) + margin.top + margin.bottom)
       .appendOnce('g', 'map-container')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
@@ -208,7 +236,7 @@ VIZ.requiresData([
     connections
         .enter()
       .append('line')
-        .attr('class', 'connect')
+        .attr('class', function (d) { return 'connect ' + d.line + '-dimmable'; })
         .attr('x1', function (d) { return d.source.pos[0]; })
         .attr('y1', function (d) { return d.source.pos[1]; })
         .attr('x2', function (d) { return d.target.pos[0]; })
@@ -233,11 +261,11 @@ VIZ.requiresData([
               .offset([-10, 0]);
           }
           tip.show(d);
-          // highlightMareyTitle(d.id, _.unique(d.links.map(function (link) { return link.line; })));
+          highlightMareyTitle(d.id, _.unique(d.links.map(function (link) { return link.line; })));
         })
         .on('mouseout', function (d) {
           tip.hide(d);
-          // highlightMareyTitle(null);
+          highlightMareyTitle(null);
         })
         .attr('cx', function (d) { return d.pos[0]; })
         .attr('cy', function (d) { return d.pos[1]; })
@@ -254,7 +282,7 @@ VIZ.requiresData([
         .classed(clazz, true)
         .classed('end', true)
         .classed('middle', false)
-        .attr('r', endDotRadius);
+        .attr('r', Math.max(endDotRadius, 3));
     }
     dot('place-asmnl', "red");
     dot('place-alfcl', "red");
@@ -308,27 +336,137 @@ VIZ.requiresData([
         .attr('cx', function (d) { return d.pos[0]; })
         .attr('cy', function (d) { return d.pos[1]; });
     trains.exit().remove();
-    timeDisplay.text(moment(unixSeconds * 1000).format('ddd h:mm a'));
+    timeDisplay.text(moment(unixSeconds * 1000).format('h:mm a'));
   }
 
   var xExtent = d3.extent(d3.values(header), function (d) { return d[0]; });
   var minUnixSeconds = d3.min(d3.values(trips), function (d) { return d.begin; });
   var maxUnixSeconds = d3.max(d3.values(trips), function (d) { return d.end; });
+  var LINED_UP_STATIONS = [
+    "place-alfcl",
+    "place-asmnl",
+    "place-brntn",
+    "place-wondl",
+    "place-gover",
+    "place-bomnl",
+    "place-ogmnl",
+    "place-forhl"
+  ];
+  var LINED_UP_ANCHORS = {
+    "place-alfcl": {text: "Alewife", anchor: "beginning"},
+    "place-asmnl": {text: "Ashmont/Braintree", anchor: "end"},
+    "place-brntn": {anchor: "end"},
+    "place-wondl": {text: "Wonderland", anchor: "beginning"},
+    "place-gover": {text: "Gov't Center", anchor: "end"},
+    "place-bomnl": {anchor: "end"},
+    "place-ogmnl": {text: "Orient Heights", anchor: "beginning"},
+    "place-forhl": {text: "Forest Hills", anchor: "end"}
+  };
+  var LINED_UP_PLACEMENT = [
+    0,
+    0.415,
+    0.415,
+    0.415,
+    0.64,
+    0.64,
+    0.64,
+    1
+  ];
+  var LINED_UP_ANNOTATION_PLACEMENT = [
+    0.415 / 2,
+    0.415 / 2,
+    0.415 / 2,
+    (0.415 + 0.64) / 2,
+    (0.415 + 0.64) / 2,
+    (0.415 + 0.64) / 2,
+    (1 + 0.64) / 2,
+    (1 + 0.64) / 2
+  ];
+  var linedUpTrips = trips.filter(function (trip) {
+    return _.contains(LINED_UP_STATIONS, trip.stops[0].stop);
+  });
+  var linedUpYScale = d3.scale.linear()
+      .domain([0, d3.max(linedUpTrips, function (trip) {
+        return trip.stops[trip.stops.length - 1].time - trip.stops[0].time;
+      })]);
+  var linedUpTimeScale = d3.time.scale()
+      .domain([0, d3.max(linedUpTrips, function (trip) {
+        return 1000 * (trip.stops[trip.stops.length - 1].time - trip.stops[0].time);
+      })]);
+
   function renderMarey(outerSvg, outerWidth) {
     outerWidth = Math.round(outerWidth);
-    var margin = {top: 0, right: 200, bottom: 0, left: 60};
+    var margin = {top: 100, right: 200, bottom: 0, left: 60};
     var outerHeight = 3500;
     var width = outerWidth - margin.left - margin.right,
         height = outerHeight - margin.top - margin.bottom;
     outerSvg.attr('width', outerWidth)
         .attr('height', outerHeight);
 
+    var headerSvg = outerSvg.appendOnce('g', 'header')
+        .attr('transform', 'translate(' + margin.left + ',0)');
     var svg = outerSvg.appendOnce('g', 'main')
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
     var svgBackground = svg.appendOnce('g', 'background');
     var svg = svg.appendOnce('g', 'foreground');
     var annotationContainer = outerSvg.appendOnce('g', 'annotations')
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
+
+    // Lined-up marey prep
+    var linedUpMargin = {top: 10, right: 10, bottom: 10, left: 30};
+    var linedUpOuterWidth = $('.lined-up-marey-container .container').width();
+    var linedUpOuterHeight = 300;
+    var linedUpWidth = linedUpOuterWidth - linedUpMargin.left - linedUpMargin.right,
+        linedUpHeight = linedUpOuterHeight - linedUpMargin.top - linedUpMargin.bottom;
+    var linedUpSvg = d3.select('.lined-up-marey').appendOnce('svg', 'lined-up')
+        .attr('width', linedUpOuterWidth)
+        .attr('height', linedUpOuterHeight);
+    var linedUp = linedUpSvg.appendOnce('g', 'g');
+    linedUp.firstTime.attr('transform', 'translate(' + linedUpMargin.left + ',' + linedUpMargin.top + ')');
+    var linedUpXScale = d3.scale.ordinal()
+        .domain(LINED_UP_STATIONS)
+        .range(LINED_UP_PLACEMENT.map(function (d) { return d * linedUpWidth; }));
+    var linedUpXPlacementScale = d3.scale.ordinal()
+        .domain(LINED_UP_STATIONS)
+        .range(LINED_UP_ANNOTATION_PLACEMENT.map(function (d) { return d * linedUpWidth; }));
+    linedUpYScale.range([0, linedUpHeight]);
+    linedUpTimeScale.range([0, linedUpHeight]);
+
+    var timeFmt = d3.time.format("%-Mm");
+    var linedUpAxis = d3.svg.axis()
+      .tickFormat(function (d) { return Math.round(d / 1000 / 60) + 'm'; })
+      .ticks(d3.time.minute, 10)
+      .innerTickSize(-linedUpWidth)
+      .outerTickSize(0)
+      .scale(linedUpTimeScale)
+      .orient("left");
+    linedUp.appendOnce('g', 'y axis')
+      .call(linedUpAxis);
+
+    var stationHeaders = linedUp.selectAll('.station-header')
+        .data(LINED_UP_STATIONS.filter(function (d) { return LINED_UP_ANCHORS[d].text; }));
+    stationHeaders
+        .enter()
+      .append('g')
+        .attr('class', 'station-header')
+      .append('text')
+        .attr('text-anchor', function (d) {
+          return LINED_UP_ANCHORS[d].anchor;
+        })
+        .attr('dx', function (d) {
+          return LINED_UP_ANCHORS[d].anchor === 'beginning' ? 5 : -5;
+        })
+        .attr('dy', -2)
+        .text(function (d) {
+          return LINED_UP_ANCHORS[d].text;
+        });
+    stationHeaders
+        .attr('transform', function (d) {
+          return 'translate(' + linedUpXScale(d) + ',0)';
+        });
+
+
+
 
     var xScale = d3.scale.linear()
         .domain(xExtent)
@@ -353,12 +491,25 @@ VIZ.requiresData([
       stationXScaleInvert[header[key][0]] = key;
     });
 
+    var stationLabels = headerSvg.selectAll('.station-label')
+        .data(nodesPerLine)
+        .enter()
+      .append('text')
+        .attr('class', 'station-label')
+        .style('display', function (d) { return end[d] ? null : 'none'; })
+        .style('text-anchor', 'beginning')
+        .text(function (d) { return stationToName[d].replace(/ station/i, ''); });
+
+    stationLabels
+        .attr('transform', function (d) { return 'translate(' + (stationXScale(d) - 2) + ',' + (margin.top - 3) + ')rotate(-70)'; })
+
     var annotations = annotationContainer.selectAll('.annotation').data(ANNOTATIONS);
     annotations
         .enter()
       .append('g')
         .attr('class', 'annotation')
       .append('text')
+        .attr('id', function (d) { return d.id; })
         .text(function (d) { return d.text; })
         .call(VIZ.wrap, margin.right - 20);
 
@@ -463,9 +614,10 @@ VIZ.requiresData([
           last = stop;
           return result;
         });
-        var points = _.flatten(stops).map(function (stop) {
+        var flattenedStops = _.flatten(stops);
+        var points = flattenedStops.map(function (stop) {
           if (!stop) { return null; }
-          var y = yScale(stop.time);
+          var y = yScale(stop.time) - yScale(flattenedStops[0].time);
           var x = xScale(header[stop.stop + '|' + d.line][0]);
           return [x, y];
         });
@@ -474,7 +626,10 @@ VIZ.requiresData([
     }
 
     var mareyLines = svg.selectAll('.mareyline')
-        .data(trips, function (d) { return d.trip; })
+        .data(trips, function (d) { return d.trip; });
+
+    var linedUpMareyLines = linedUp.selectAll('.mareyline')
+        .data(linedUpTrips, function (d) { return d.trip; });
 
     mareyLines
         .enter()
@@ -484,8 +639,66 @@ VIZ.requiresData([
         .on('mouseover', hoverTrain)
         .on('mouseout', unHoverTrain);
 
+    function highlightLinedUpMarey(d) {
+      highlightedLinedUpMarey = d;
+      var annotation = linedUp.appendOnce('text', 'mareyannotation');
+      var last = d.stops[d.stops.length - 1];
+      var first = d.stops[0];
+      var xEnd = linedUpXPlacementScale(first.stop);
+      var xBegin = linedUpXScale(first.stop);
+      var y = linedUpYScale((last.time - first.time));
+      linedUp.appendOnce('text', 'mareyannotation start')
+        .attr('x', xBegin + (LINED_UP_ANCHORS[first.stop].anchor === 'beginning' ?  20 : -20))
+        .attr('y', 12)
+        .style('text-anchor', LINED_UP_ANCHORS[first.stop].anchor)
+        .text(moment(first.time * 1000).format('h:mma'));
+      linedUp.appendOnce('text', 'mareyannotation end')
+        .attr('x', xEnd)
+        .attr('y', y)
+        .style('text-anchor', 'middle')
+        .text(moment(last.time * 1000).format('h:mma'));
+      linedUp.appendOnce('text', 'mareyannotation time')
+        .attr('x', xEnd)
+        .attr('y', y + 15)
+        .style('text-anchor', 'middle')
+        .text(Math.round((last.time - first.time) / 60) + 'm');
+      linedUp.selectAll('.mareyline').classed({
+        highlight: function (other) { return other === d; },
+        dimmed: function (other) { return other !== d; }
+      });
+    }
+    function unhighlightLinedUpMarey(d) {
+      highlightedLinedUpMarey = null;
+      linedUp.selectAll('.mareyannotation').remove();
+      linedUp.selectAll('.mareyline').classed({
+        highlight: false,
+        dimmed: false
+      });
+    }
+
+    linedUpMareyLines
+        .enter()
+      .append('path')
+        .attr('class', function (d) { return 'mareyline ' + d.line; })
+        .on('mouseover', highlightLinedUpMarey)
+        .on('mouseout', unhighlightLinedUpMarey)
+
     mareyLines
+        .attr('transform', function (d) {
+          if (!d.origY) { d.origY = yScale(d.stops[0].time); }
+          return 'translate(0,' + d.origY + ')';
+        })
         .attr('d', draw(xScale, yScale));
+
+    function modifiedXScale(d) {
+      return 0.4 * xScale(d) * linedUpWidth / width;
+    }
+    linedUpMareyLines
+        .attr('transform', function (d) {
+          var firstX = -modifiedXScale(header[d.stops[0].stop + '|' + d.line][0]) + linedUpXScale(d.stops[0].stop);
+          return 'translate(' + firstX + ',0)';
+        })
+        .attr('d', draw(modifiedXScale, linedUpYScale));
 
     container.on('mousemove', selectTime);
     container.on('mousemove.titles', updateTitle);
@@ -501,23 +714,19 @@ VIZ.requiresData([
       .attr('y', -14)
       .attr('width', 45)
       .attr('height', 12);
-    timeDisplay = barForeground.appendOnce('text', 'timeDisplay')
-    timeDisplay.firstTime
+    barForeground.appendOnce('text', 'marey-time').firstTime
       .attr('dx', 2)
       .attr('dy', -4);
+    timeDisplay = container.selectAll('.marey-time');
     var bar = container.selectAll("g.g-bar");
-
-    // function highlight() {
-    //   d3.select('body').classed('highlight-active', !!highlightedTrip);
-    //   d3.selectAll('.highlightable')
-    //     .classed('active', function (d) { return d.trip === highlightedTrip; });
-    // }
 
     function updateTitle() {
       var pos = d3.mouse(svg.node());
       var x = pos[0];
       var station = stationXScaleInvert[Math.round(xScale.invert(x))];
-      // highlightMareyTitle(station);
+      if (station) {
+        highlightMareyTitle(station);
+      }
     }
 
     function selectTime() {
@@ -585,8 +794,8 @@ VIZ.requiresData([
     }
 
     function afterresized() {
-      y0 = marey.node().offsetTop;
-      y1 = y0 + marey.node().offsetHeight - innerHeight;
+      y0 = marey.node().offsetTop + 100;
+      y1 = (y0 - 100) + marey.node().offsetHeight - $('.fixed-left').height();
       render();
     }
 
@@ -597,6 +806,7 @@ VIZ.requiresData([
         renderSplitScreen();
       }
     }
+
 
     function scrolled() {
       fixedLeft.style("top", window.pageYOffset > y1 ? y1 - window.pageYOffset + "px" : window.pageYOffset < y0 ? y0 - window.pageYOffset + "px" : null);

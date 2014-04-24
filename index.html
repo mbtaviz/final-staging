@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-  <meta name="viewport" content="width=780">
+  <meta name="viewport" content="width=700">
   <title>A Month in the Life of the MBTA</title>
 
   <link href='styles/main.css' rel='stylesheet' type='text/css'>
@@ -65,9 +65,27 @@
     </div>
   </div>
 
+
   <!-- Marey -->
-  <div class="full-width marey-container">
-    <div class="fixed-left"></div>
+  <div class="full-width marey-container loading">
+    <div class="container text-center">
+      <h3>Subway Trips on Monday February 3, 2014</h3>
+    </div>
+    <div class="fixed-left">
+      <div class="side-map">
+      </div>
+      <div class="side-caption">
+        <p>Locations of each train on the <a href="#" data-line="red" class="highlight">red</a>, <a href="#" data-line="blue" class="highlight">blue</a>, and <a href="#" data-line="orange" class="highlight">orange</a> lines at <span class="marey-time"></span>.  Hover over the diagram to the right to display trains at a different time.</p>
+        <p>Trains are on the right side of the track relative to the direction they are moving.</p>
+        <p>
+          See the
+          <a href="#" data-dest="marey-morning-rush" class="scrollto">morning rush-hour</a>, 
+          <a href="#" data-dest="marey-midday-lull" class="scrollto">midday lull</a>, 
+          <a href="#" data-dest="marey-evening-rush" class="scrollto">afternoon rush-hour</a>, and the
+          <a href="#" data-dest="marey-evening-lull" class="scrollto">evening lull</a>.
+        </p>
+      </div>
+    </div>
     <div class="marey"></div>
   </div>
 
@@ -76,7 +94,7 @@
       <p>To better compare these individual trips, we line up the starting points and you can see the range of fastest to slowest trips, as well as variation. (describe a couple of notable trips, where hovering over them dims all of the others)</p>
 
       <!-- Lined-up Marey -->
-      <div class="placeholder lined-up-marey"></div>
+      <div class="lined-up-marey"></div>
 
     </div>
   </div>

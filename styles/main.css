@@ -1,3 +1,9 @@
+/*!
+ * Preboot v2
+ *
+ * Open sourced under MIT license by @mdo.
+ * Some variables and mixins from Bootstrap (Apache 2 license).
+ */
 html {
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -102,6 +108,15 @@ path.orange {
   stroke: #E87200;
   fill: none;
 }
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.text-center {
+  text-align: center;
+}
 .ios .hide-on-ios {
   display: none;
 }
@@ -128,6 +143,8 @@ path.orange {
 }
 /* Creates a small triangle extender for the tooltip */
 .d3-tip:after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box;
   display: inline;
   font-size: 15px;
@@ -212,6 +229,9 @@ path.orange {
 }
 .header .container {
   position: relative;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 .header .caption {
   position: absolute;
@@ -233,6 +253,7 @@ path.orange {
   border: 1px solid #888;
   margin: 10px auto 0 auto;
   border-radius: 3px;
+  overflow: hidden;
 }
 .header .sign .sign-top {
   background-color: #E12D27;
@@ -265,11 +286,19 @@ path.orange {
 .fixed-left {
   left: 0;
   top: 0;
-  height: 100%;
   position: fixed;
   z-index: 1;
   width: auto;
   vertical-align: top;
+  text-align: center;
+}
+.fixed-left .side-map,
+.fixed-left svg {
+  margin: 0 auto;
+}
+.fixed-left p {
+  text-align: left;
+  font-size: 12px;
 }
 .datagrid {
   width: 75%;
@@ -305,12 +334,6 @@ path.orange {
 .marey {
   /* Make ends of line bolder */
 }
-.marey .axis path,
-.marey .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
 .marey .bar {
   stroke: black;
   stroke-width: 1px;
@@ -319,6 +342,7 @@ path.orange {
 }
 .marey .station-label {
   opacity: 0.7;
+  font-size: 10px;
 }
 .marey text.station-label.active {
   opacity: 1;
@@ -360,6 +384,9 @@ path.orange {
   stroke-width: 1px;
   fill: none;
 }
+.marey-container.loading .fixed-left {
+  display: none;
+}
 circle.hoverable {
   stroke-opacity: 0;
 }
@@ -385,4 +412,24 @@ circle.hover {
 }
 .highlight-active .highlightable.active {
   opacity: 1;
+}
+.lined-up-marey .y.axis .tick line {
+  stroke: #ccc;
+}
+.lined-up-marey .mareyline {
+  opacity: 0.1;
+}
+.lined-up-marey .mareyline.highlight {
+  opacity: 1;
+  stroke-width: 2px;
+}
+.lined-up-marey .mareyline.dimmed {
+  opacity: 0.02;
+  stroke: black;
+}
+.line-dimmed {
+  opacity: 0.1 !important;
+}
+.section-trains {
+  margin-bottom: 4em;
 }
