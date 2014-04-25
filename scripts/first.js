@@ -39,7 +39,7 @@
     var width = pageWidth();
     var height = pageHeight();
     watched.forEach(function (cb) {
-      cb(width, height);
+      cb(Math.max(600, width), height);
     });
   }
 
@@ -58,6 +58,22 @@
     var result = this.selectAll(type + '.' + clazz.replace(/ /g, '.')).data([1]);
     result.firstTime = result.enter().append(type).attr('class', clazz);
     return result;
+  }
+
+  // add "onOnce" method to d3 selections - adds a single listener to the selection that filters on sub-selections
+  d3.selection.prototype.onOnce = function (eventType, subSelector, func) {
+    this.each(function () {
+      $(this).on(eventType, subSelector, function (evt) {
+        var d = d3.select(this).datum();
+        try {
+          d3.event = evt.originalEvent;
+          return func.call(this, d);
+        } finally {
+          d3.event = null;
+        }
+      });
+    });
+    return this;
   }
 
   function wrap(text, width) {

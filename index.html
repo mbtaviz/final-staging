@@ -16,7 +16,7 @@
       </div>
       <div class="caption">
         <div class="sign">
-          <div class="sign-top">
+          <div class="sign-top red">
             <h1>A Month in the Life of the MBTA</h1>
           </div>
           <div class="sign-bottom">
@@ -103,15 +103,26 @@
   <div class="full-width section-people">
     <div class="container">
       <h2>The People</h2>
-      <p>In a typical weekday, over 400,000 people enter a station along the red, orange, or blue lines.  On Saturdays and holidays that number drops to 230,000 and on Sundays it drops to 160,000.  The busiest day was Friday February 7 when 470,187 people entered the system.</p>
-      <p>This shows the total number of entries and exits for the red, orange, and blue line for every hour over the entire month. You can see weekends and holidays, as well as daily peaks around rush hour.  Our exit data is unreliable since not all stations measure require that people exit through a turnstile.</p>
-      <div class="placeholder turnstile-total"></div>
+      <p>In a typical weekday, 425,000 people enter a station along the red, orange, or blue lines.  On weekends and holidays, that number drops to 200,000.  The busiest day was Friday February 7 when 470,187 people entered the system.</p>
+      <p>
+        This shows the total number of entries and exits for the red, orange, and blue line for every hour over the entire month.
+        You can see
+        <a href="#" class="highlight weekends">weekends</a>
+        and
+        <a href="#" class="highlight holidays">holidays</a>,
+        as well as
+        <a href="#" class="highlight holidays">daily peaks around rush hour</a>
+        and
+        <a href="#" class="highlight snow">two snow storms</a>.
+        Our exit data is unreliable since not all stations measure require that people exit through a turnstile.</p>
+
+      <div class="turnstile-total"></div>
       
       <!-- Render a single row of the turnstile heatmap for sum of all stations -->
       <p>The busiest stations are all along the Red Line.  Harvard topped the list, followed closely by South Station, and then Downtown Crossing.  The graphic below shows turnstile entries over time across all stations.</p>
 
       <!-- Render the turnstile heatmap, sortable by position along the line or entries/decreasing -->
-      <div class="placeholder turnstile-all"></div>
+      <div class="turnstile-all"></div>
 
     </div>
   </div>
@@ -155,5 +166,6 @@
   <script type="text/javascript" src="scripts/dataloader.js"></script>
   <script type="text/javascript" src="scripts/header.js"></script>
   <script type="text/javascript" src="scripts/marey.js"></script>
+  <script type="text/javascript" src="scripts/turnstile.js"></script>
 </body>
 </html>

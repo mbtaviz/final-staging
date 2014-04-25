@@ -5,10 +5,10 @@ VIZ.requiresData([
   'json!data/marey-header.json'
 ]).progress(function (percent) {
   "use strict";
-  d3.select(".marey").text('Loading train data... ' + percent + '%').style('text-align', 'center');
+  d3.selectAll(".marey, .lined-up-marey").text('Loading train data... ' + percent + '%').style('text-align', 'center');
 }).onerror(function () {
   "use strict";
-  d3.select(".marey").text('Error loading train data').style('text-align', 'center');
+  d3.select(".marey, .lined-up-marey").text('Error loading train data').style('text-align', 'center');
 }).done(function (network, spider, trips, header) {
   "use strict";
 
@@ -97,6 +97,7 @@ VIZ.requiresData([
   var fixedLeft = d3.select(".fixed-left");
   var mapSvg = fixedLeft.select('.side-map').append('svg');
   var marey = d3.select(".marey").text('').style('text-align', 'left').append('svg');
+  d3.select(".lined-up-marey").text('');
   var container = d3.select('.marey-container').classed('loading', false);
   var idToNode = {};
   var idToLine = {};
@@ -787,7 +788,7 @@ VIZ.requiresData([
     function resized(width, height) {
       pageWidth = width;
       vizWidth = Math.min(pageWidth, MAX_WIDTH) - GUTTER * 2;
-      x0 = (pageWidth - vizWidth) / 2;
+      x0 = (pageWidth - vizWidth) * 0.5;
       pageHeight = height;
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(afterresized, 10);
