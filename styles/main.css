@@ -480,10 +480,10 @@ circle.hover {
   text-anchor: middle;
 }
 .section-people .station.total {
-  font-size: 14px;
+  font-size: 12px;
 }
 .section-people .station.header {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
   shape-rendering: crispEdges;
 }
@@ -492,6 +492,18 @@ circle.hover {
   fill: none;
   stroke: none;
   shape-rendering: crispEdges;
+}
+.section-people .highlight {
+  fill: none;
+  stroke: steelBlue;
+  stroke-opacity: 1;
+  shape-rendering: crispEdges;
+}
+.section-people line.highlight {
+  stroke-width: 1px;
+}
+.section-people rect.highlight {
+  stroke-width: 2px;
 }
 .section-people rect:hover {
   fill: steelBlue !important;
