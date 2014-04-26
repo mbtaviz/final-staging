@@ -144,6 +144,11 @@ path.orange {
   stroke: #000;
   shape-rendering: crispEdges;
 }
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
 .text-center {
   text-align: center;
 }
@@ -277,14 +282,21 @@ path.orange {
 .header .graphic {
   position: absolute;
   top: 0;
+  left: 50%;
+}
+.header .graphic .connect {
+  stroke-width: 0.5;
+  stroke: black;
+}
+.header .graphic circle.station.middle {
+  fill: gray;
+  opacity: 0.3;
+}
+.header .graphic circle.station.end {
+  opacity: 0.8;
 }
 .header .sign {
   max-width: 600px;
-}
-.header .sign .sign-top {
-  fill: #e12d27;
-  stroke: #e12d27;
-  background-color: #e12d27 !important;
 }
 @media (max-width: 630px) {
   .header .sign h1 {
@@ -439,11 +451,11 @@ circle.hover {
   opacity: 0.1;
 }
 .lined-up-marey .mareyline.highlight {
-  opacity: 1;
+  opacity: 1 !important;
   stroke-width: 2px;
 }
 .lined-up-marey .mareyline.dimmed {
-  opacity: 0.02;
+  opacity: 0.02 !important;
   stroke: black;
 }
 .line-dimmed {

@@ -36,7 +36,6 @@ VIZ.requiresData([
   turnstile.stops.sort(function (a, b) {
     return d3.descending(a.entrancesByType.all, b.entrancesByType.all);
   });
-  // console.log(turnstile.stops)
 
   all.selectAll('.station-section')
       .data(turnstile.stops, function (d) { return d.name; })

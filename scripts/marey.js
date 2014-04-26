@@ -183,6 +183,24 @@ VIZ.requiresData([
     hoveredTrip = d.trip;
     hover();
   }
+  var linedUpMargin = {top: 10, right: 10, bottom: 10, left: 80};
+  var linedUpOuterHeight = 300;
+  var linedUpHeight = linedUpOuterHeight - linedUpMargin.top - linedUpMargin.bottom;
+  var linedUpDayScale = d3.time.scale()
+    .domain([0, 24 * 60 * 60 * 1000])
+    .range([0, linedUpHeight]);
+  var brush = d3.svg.brush()
+      .y(linedUpDayScale)
+      .extent([7 * 60 * 60 * 1000, 9 * 60 * 60 * 1000])
+      .on("brush", brushed);
+  function brushed() {
+    var lo = brush.extent()[0] / 1000;
+    var hi = brush.extent()[1] / 1000;
+    d3.selectAll('.lined-up .mareyline')
+        .style('opacity', function (d) {
+          return lo < d.secs && hi > d.secs ? 0.7 : 0.1;
+        });
+  }
   d3.select('body').on('click.highlightoff', function () { highlightedTrip = null; highlight(); });
   function hover() {
     d3.selectAll('.hoverable')
@@ -343,6 +361,11 @@ VIZ.requiresData([
   var xExtent = d3.extent(d3.values(header), function (d) { return d[0]; });
   var minUnixSeconds = d3.min(d3.values(trips), function (d) { return d.begin; });
   var maxUnixSeconds = d3.max(d3.values(trips), function (d) { return d.end; });
+  trips.forEach(function (d) {
+    d.stops = d.stops || [];
+    var m = moment(d.begin*1000);
+    d.secs = m.diff(m.clone().startOf('day')) / 1000;
+  });
   var LINED_UP_STATIONS = [
     "place-alfcl",
     "place-asmnl",
@@ -394,6 +417,17 @@ VIZ.requiresData([
       .domain([0, d3.max(linedUpTrips, function (trip) {
         return 1000 * (trip.stops[trip.stops.length - 1].time - trip.stops[0].time);
       })]);
+  d3.selectAll('.lined-up-highlight')
+    .on('click', function (d) {
+      d3.event.preventDefault();
+    })
+    .on('mouseover', function () {
+      var lo = +d3.select(this).attr('data-lo');
+      var hi = +d3.select(this).attr('data-hi');
+      brush.extent([lo * 60 * 60 * 1000, hi * 60 * 60 * 1000]);
+      d3.selectAll('g.brush').call(brush);
+      brushed();
+    });
 
   function renderMarey(outerSvg, outerWidth) {
     outerWidth = Math.round(outerWidth);
@@ -414,11 +448,8 @@ VIZ.requiresData([
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
 
     // Lined-up marey prep
-    var linedUpMargin = {top: 10, right: 10, bottom: 10, left: 30};
     var linedUpOuterWidth = $('.lined-up-marey-container .container').width();
-    var linedUpOuterHeight = 300;
-    var linedUpWidth = linedUpOuterWidth - linedUpMargin.left - linedUpMargin.right,
-        linedUpHeight = linedUpOuterHeight - linedUpMargin.top - linedUpMargin.bottom;
+    var linedUpWidth = linedUpOuterWidth - linedUpMargin.left - linedUpMargin.right;
     var linedUpSvg = d3.select('.lined-up-marey').appendOnce('svg', 'lined-up')
         .attr('width', linedUpOuterWidth)
         .attr('height', linedUpOuterHeight);
@@ -432,6 +463,31 @@ VIZ.requiresData([
         .range(LINED_UP_ANNOTATION_PLACEMENT.map(function (d) { return d * linedUpWidth; }));
     linedUpYScale.range([0, linedUpHeight]);
     linedUpTimeScale.range([0, linedUpHeight]);
+
+    var linedUpDayAxis = d3.svg.axis()
+      .scale(linedUpDayScale)
+      .tickFormat(d3.time.format.utc("%-I %p"))
+      .orient('left')
+      .ticks(d3.time.hour, 1);
+    var brushAxis = linedUp.appendOnce('g', 'time axis')
+      .attr('transform', 'translate(-40,0)')
+      .call(linedUpDayAxis);
+
+    brushAxis.on('mousemove.brush', function () {
+      var y = d3.mouse(brushAxis.node())[1];
+      var time = linedUpDayScale.invert(y);
+      brush.extent([time.getTime() - 60 * 60 * 1000, time.getTime() + 60 * 60 * 1000]);
+      d3.selectAll('g.brush').call(brush);
+      brushed();
+    });
+
+    brushAxis.appendOnce("g", "brush").firstTime
+        .call(brush)
+        .call(brushed)
+      .selectAll("rect")
+        .attr("x", -45)
+        .attr("width", 50);
+
 
     var timeFmt = d3.time.format("%-Mm");
     var linedUpAxis = d3.svg.axis()
@@ -632,13 +688,18 @@ VIZ.requiresData([
     var linedUpMareyLines = linedUp.selectAll('.mareyline')
         .data(linedUpTrips, function (d) { return d.trip; });
 
+    linedUp.firstTime
+        .onOnce('mouseover', 'path', highlightLinedUpMarey)
+        .onOnce('mouseout', 'path', unhighlightLinedUpMarey);
+
+    svg.firstTime
+        .onOnce('mouseover', 'path.mareyline', hoverTrain)
+        .onOnce('mouseout', 'path.mareyline', unHoverTrain)
+        .onOnce('click', 'path.mareyline', highlightTrain);
     mareyLines
         .enter()
       .append('path')
-        .attr('class', function (d) { return 'mareyline hoverable highlightable dimmable ' + d.line; })
-        .on('click', highlightTrain)
-        .on('mouseover', hoverTrain)
-        .on('mouseout', unHoverTrain);
+        .attr('class', function (d) { return 'mareyline hoverable highlightable dimmable ' + d.line; });
 
     function highlightLinedUpMarey(d) {
       highlightedLinedUpMarey = d;
@@ -680,9 +741,7 @@ VIZ.requiresData([
     linedUpMareyLines
         .enter()
       .append('path')
-        .attr('class', function (d) { return 'mareyline ' + d.line; })
-        .on('mouseover', highlightLinedUpMarey)
-        .on('mouseout', unhighlightLinedUpMarey)
+        .attr('class', function (d) { return 'mareyline ' + d.line; });
 
     mareyLines
         .attr('transform', function (d) {
