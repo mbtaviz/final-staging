@@ -293,7 +293,7 @@ path.orange {
   opacity: 0.3;
 }
 .header .graphic circle.station.end {
-  opacity: 0.8;
+  opacity: 1;
 }
 @media (max-width: 630px) {
   .header .sign h1 {
@@ -520,4 +520,9 @@ circle.hover {
 .interaction-all path {
   stroke-width: 0.2;
   stroke: black;
+}
+.interaction-all .indicator {
+  stroke: black;
+  stroke-width: 1px;
+  shape-rendering: crispEdges;
 }

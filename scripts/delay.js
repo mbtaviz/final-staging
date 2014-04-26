@@ -10,9 +10,9 @@ VIZ.requiresData([
   d3.select(".interaction-all").text('Error loading delay data').style('text-align', 'center');
 }).done(function (delay, network, spider) {
   "use strict";
-  var margin = {top: 20,right: 10,bottom: 10,left: 10};
+  var margin = {top: 20,right: 40,bottom: 10,left: 10};
   var outerWidth = 700;
-  var outerHeight = 700;
+  var outerHeight = 1000;
   var height = outerHeight - margin.top - margin.bottom;
   var width = outerWidth - margin.left - margin.right;
   var idToLine = {};
@@ -52,7 +52,7 @@ VIZ.requiresData([
   var days = d3.range(0, 7);
   var rowScale = d3.scale.ordinal()
       .domain(days)
-      .rangeBands([0, height], 0.1);
+      .rangeRoundBands([0, height], 0.1);
 
   var rows = svg.selectAll('.row')
       .data(days)
@@ -63,42 +63,71 @@ VIZ.requiresData([
 
   ////////////////////////////// draw the row data
   var horizonTypes = [
-    'delay_actual_inbound',
-    'delay_actual_outbound',
-    'ins_total',
-    'outs_total'
+    'delay_actual',
+    // 'delay_mbta',
+    'ins_total'
+    // 'delay_actual_inbound',
+    // 'delay_actual_outbound',
+    // 'ins_total',
+    // 'outs_total'
   ];
-  console.log(delay);
-  var horizonContainerMargin = {top: 0,right: 0,bottom: 0,left: 0};
+  var horizonContainerMargin = {top: 30,right: 0,bottom: 30,left: 0};
   var horizonScale = d3.scale.ordinal()
-      .domain(days)
-      .rangeBands([0, rowScale.rangeBand()], 0.1);
-  var horizonWidth = outerWidth - rowScale.rangeBand() - horizonContainerMargin.left - horizonContainerMargin.right;
-  var horizonHeight = horizonScale.rangeBand() - horizonContainerMargin.top - horizonContainerMargin.bottom;
+      .domain(horizonTypes)
+      .rangeRoundBands([horizonContainerMargin.top, rowScale.rangeBand() - horizonContainerMargin.bottom], 0);
+  var horizonWidth = width - rowScale.rangeBand() - horizonContainerMargin.left - horizonContainerMargin.right;
+  var horizonHeight = horizonScale.rangeBand();
   var timeScale = d3.time.scale()
     .domain([0, 24 * 60 * 60 * 1000])
-    .range([0, horizonWidth]);
+    .range([0, horizonWidth])
+    .clamp(true);
   var timeAxis = d3.svg.axis()
     .scale(timeScale)
     .tickFormat(d3.time.format.utc("%-I%p"))
     .orient('top')
     .ticks(d3.time.hours, 2);
-  svg.append('g')
+  var axisContainer = svg.append('g')
     .attr('class', 'x axis')
     .attr('transform', 'translate(' + (rowScale.rangeBand() + horizonContainerMargin.left) + ',0)')
     .call(timeAxis);
   var horizonContainer = rows.append('g')
-    .attr('transform', 'translate(' + (rowScale.rangeBand() + horizonContainerMargin.left) + ',' + horizonContainerMargin.top + ')');
+    .attr('transform', 'translate(' + (rowScale.rangeBand() + horizonContainerMargin.left) + ',0)');
   var horizon = d3.horizon()
-      .width(width)
-      .height(height)
-      .bands(1)
-      .mode("mirror")
+      .width(horizonWidth)
+      .height(horizonHeight)
+      .yMax(1.1)
+      .bands(3)
+      .mode("offset")
       .interpolate("basis");
+  horizon.color.domain([-3, -2, -1, 0, 1, 2, 3]).range(['red', '#888', '#ccc', 'white', '#ccc', '#888', 'red']);
+  var horizons = horizonContainer.selectAll('.horizon-row')
+      .data(function (day) { return horizonTypes.map(function (type) { return {type: type, day: day}; }); })
+      .enter()
+    .append('g')
+      .attr('class', 'horizon-row')
+      .attr('transform', function (d) { return 'translate(0,' + (horizonScale(d.type)) + ')'; });
 
+  horizons.selectAll('.the-horizon')
+      .data(function (d, i) {
+        var min = d3.min(delay.overTime, function (t) { return t[d.type]; });
+        var max = d3.max(delay.overTime, function (t) { return t[d.type]; });
+        var scale = d3.scale.linear().domain([min, max]);
+        return [
+          _.chain(delay.overTime)
+            .where({day: d.day})
+            .filter(function (t) { return typeof (t[d.type]) === 'number'; })
+            .sortBy('msOfDay')
+            .map(function (t) { return [t.msOfDay, d.type === 'ins_total' ? -scale(t[d.type]) : scale(t[d.type])]; })
+            .value()
+        ];
+      })
+      .enter()
+    .append('g')
+      .attr('class', 'horizon')
+      .call(horizon);
 
   ////////////////////////////// calculate glyph attributes
-  var glyphMargin = {top: 0,right: 0,bottom: 0,left: 0};
+  var glyphMargin = {top: 0,right: 0,bottom: 0,left: 10};
 
   var glyphWidth = rowScale.rangeBand() - glyphMargin.left - glyphMargin.right,
       glyphHeight = rowScale.rangeBand() - glyphMargin.top - glyphMargin.bottom;
@@ -110,7 +139,7 @@ VIZ.requiresData([
   var dist = 0.3 * scale;
   var distScale = d3.scale.linear()
     .domain([0, 100])
-    .range([0.15 * scale, 0.4 * scale]);
+    .range([0.15 * scale, 0.7 * scale]);
   var colorScale = d3.scale.pow().exponent(2)
       .domain([1.2, 0.5, 0])
       .range(['white', 'black', 'red']);
@@ -124,7 +153,7 @@ VIZ.requiresData([
     }
     return color;
   }
-  var endDotRadius = 0.5 * scale;
+  var endDotRadius = 0.3 * scale;
   network.nodes.forEach(function (data) {
     data.pos = [data.x * scale, data.y * scale];
   });
@@ -135,24 +164,75 @@ VIZ.requiresData([
       .html(function(d) { return d.name; });
   svg.call(tip);
 
+  d3.select('.interaction-all').on('mousemove', mouseover);
+
+  var bar = axisContainer.append('g')
+  bar.append('line')
+    .attr('class', 'indicator')
+    .attr('x1', 0)
+    .attr('x2', 0)
+    .attr('y1', 14)
+    .attr('y2', height);
+  var time = bar.append('text').attr('dx', 0).attr('dy', 12).attr('text-anchor', 'middle');
+  var byDay = _.toArray(_.groupBy(delay.overTime, 'day'));
+  var bisect = d3.bisector(function (d) { return d.msOfDay; }).right;
+  function mouseover() {
+    var x = d3.mouse(axisContainer.node())[0];
+    var theTime = timeScale.invert(x).getTime();
+    x = timeScale(theTime);
+    bar.attr('transform', 'translate(' + x + ',0)');
+    time.text(moment(theTime).utc().format('h:mm a'));
+    byDay.forEach(function (inputData, day) {
+      delays[day] = delays[day] || {};
+      var idx = bisect(inputData, theTime / 1000);
+      var data = inputData[idx];
+      entrances[day] = data.ins;
+      data.lines.forEach(function (datum) {
+        var line = datum.line;
+        var byPair = datum.delay_actual;
+        function update(FROM, TO) {
+          var key = FROM + "|" + TO;
+          if (byPair.hasOwnProperty(key)) {
+            var diff = byPair[key];
+            var median = delay.averageActualDelays[key];
+            var speed = median / diff;
+            delays[day][key] = speed;
+          } else if (line === idToLine[key]) {
+            delays[day][key] = null;
+          }
+        }
+
+        network.links.forEach(function (link) {
+          update(link.source.id, link.target.id);
+          update(link.target.id, link.source.id);
+        });
+      });
+
+    });
+
+    rows.selectAll('.connect path')
+      .attr('fill', colorFunc)
+      .attr('d', lineFunction);
+  }
+
   ////////////////////////////// Draw the glyphs
   var lines = rows.selectAll('.connect')
       .data(function (d) { return network.links.map(function (link) { return { link: link, day: d }; })})
       .enter()
     .append('g')
-      .attr('attr', 'connect');
+      .attr('class', 'connect');
 
   lines.append('g')
       .attr('class', function (d) { return d.link.line + '-glyph ' + d.link.source.id + '-' + d.link.target.id; })
     .append('path')
       .datum(function (d) {
         return {
-          incoming: getEntering(d.link.source),
+          incoming: getEntering(d.link.source, d.day),
           line: d.link.line,
           day: d.day,
           ids: d.link.source.id + '|' + d.link.target.id,
           segment: [d.link.source.pos, d.link.target.pos],
-          outgoing: getLeaving(d.link.target),
+          outgoing: getLeaving(d.link.target, d.day),
           name: d.link.source.name + " to " + d.link.target.name
         };
       })
@@ -166,12 +246,12 @@ VIZ.requiresData([
     .append('path')
       .datum(function (d) {
         return {
-          incoming: getEntering(d.link.target),
+          incoming: getEntering(d.link.target, d.day),
           line: d.link.line,
           day: d.day,
           ids: d.link.target.id + '|' + d.link.source.id,
           segment: [d.link.target.pos, d.link.source.pos],
-          outgoing: getLeaving(d.link.source),
+          outgoing: getLeaving(d.link.source, d.day),
           name: d.link.target.name + " to " + d.link.source.name
         };
       })
@@ -180,7 +260,7 @@ VIZ.requiresData([
       .on('mouseover.tip', tip.show)
       .on('mouseout.tip', tip.hide);
 
-  function getEntering(node) {
+  function getEntering(node, day) {
     return node.links.map(function (n) {
       var segment;
       var ids;
@@ -194,12 +274,13 @@ VIZ.requiresData([
       return {
         segment: segment,
         line: n.line,
-        ids: ids
+        ids: ids,
+        day: day
       };
     });
   }
 
-  function getLeaving(node) {
+  function getLeaving(node, day) {
     return node.links.map(function (n) {
       var segment;
       var ids;
@@ -213,7 +294,8 @@ VIZ.requiresData([
       return {
         segment: segment,
         line: n.line,
-        ids: ids
+        ids: ids,
+        day: day
       };
     });
   }
@@ -291,6 +373,7 @@ VIZ.requiresData([
   }
   function offsetPoints(d) {
     var split = d.ids.split("|").map(function (a) {
+      if (typeof d.day !== 'number') { console.log(d); throw ""; }
       var val = (entrances[d.day] || {})[a];
       return distScale(val || 0);
     });
@@ -360,6 +443,9 @@ VIZ.requiresData([
       var newP4 = intersect(offsets, incomingPoints);
       if (newP4) { p4 = newP4; }
     }
+    var ids = d.ids.split("|");
+    var src = ids[0];
+    var dest = ids[1];
     return lineMapping([p1, p2, p3, p4, p1]);
   }
   function place(selection) {
@@ -368,6 +454,11 @@ VIZ.requiresData([
       .attr('fill', colorFunc)
       .attr('d', lineFunction);
   }
+
+  var lineMapping = d3.svg.line()
+    .x(function(d) { return d[0]; })
+    .y(function(d) { return d[1]; })
+    .interpolate("linear");
 
   function average(list) {
     return list.reduce(function (a,b) { return a+b; }) / list.length;
