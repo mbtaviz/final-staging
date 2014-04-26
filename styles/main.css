@@ -295,9 +295,6 @@ path.orange {
 .header .graphic circle.station.end {
   opacity: 0.8;
 }
-.header .sign {
-  max-width: 600px;
-}
 @media (max-width: 630px) {
   .header .sign h1 {
     font-size: 24px;
@@ -519,4 +516,8 @@ circle.hover {
 }
 .section-people rect:hover {
   fill: steelBlue !important;
+}
+.interaction-all path {
+  stroke-width: 0.2;
+  stroke: black;
 }

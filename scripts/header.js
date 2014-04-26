@@ -57,11 +57,11 @@
     }
 
     var radius = 2;
-    var minUnixSeconds = moment('2014/02/03 05:12 -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000;
+    var minUnixSeconds = moment('2014/02/03 07:00 -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000;
     var maxUnixSeconds = moment('2014/02/04 02:00 -0500', 'YYYY/MM/DD HH:m ZZ').valueOf() / 1000;
 
     setInterval(function () {
-      renderTrainsAtTime(lastTime > maxUnixSeconds ? minUnixSeconds : (lastTime + 30));
+      renderTrainsAtTime(lastTime > maxUnixSeconds ? minUnixSeconds : (lastTime + 60));
     }, 1000);
 
     var lastTime = minUnixSeconds;

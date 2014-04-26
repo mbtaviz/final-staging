@@ -43,7 +43,7 @@ VIZ.requiresData([
     },
     {
       time: '2014/02/03 17:00',
-      text: 'A disabled train at Broadway causes delays on trains after (below) it for over an hour.  Notice how this causes delays in the other direction as well, as trains immediately arrive at Alewife then turn around to go south.',
+      text: 'A disabled train causes delays on trains after (below) it for over an hour.  Notice how this causes delays in the other direction as well, as trains immediately arrive at Alewife then turn around to go south.',
       connections: [{
         start: '2014/02/03 17:02',
         stop: '2014/02/03 18:07',
@@ -64,6 +64,20 @@ VIZ.requiresData([
       time: '2014/02/03 19:00',
       text: 'Normal service resumes for the evening starting around 7PM',
       id: 'marey-evening-lull'
+    },
+    {
+      time: '2014/02/03 20:50',
+      text: 'A disabled train at Wellington Station causes northbound delays on the Orange Line from 8:50PM to 9:15PM',
+      connections: [{
+        start: '2014/02/03 20:50',
+        stop: '2014/02/03 21:15',
+        station: 'Community College',
+        line: 'orange'
+      }]
+    },
+    {
+      time: '2014/02/03 21:20',
+      text: 'Notice how southbound trains are temporarily delayed, but get back on schedule quickly.'
     },
     {
       time: '2014/02/04 01:30',
@@ -143,6 +157,11 @@ VIZ.requiresData([
     idToLine[link.source.id + '|' + link.target.id] = link.line;
     idToLine[link.target.id + '|' + link.source.id] = link.line;
   });
+  trips.forEach(function (d) {
+    d.stops = d.stops || [];
+    var m = moment(d.begin*1000);
+    d.secs = m.diff(m.clone().startOf('day')) / 1000;
+  });
   var stationToName = {};
   var end = {};
   var nodesPerLine = network.nodes.map(function (d) {
@@ -183,7 +202,7 @@ VIZ.requiresData([
     hoveredTrip = d.trip;
     hover();
   }
-  var linedUpMargin = {top: 10, right: 10, bottom: 10, left: 80};
+  var linedUpMargin = {top: 10, right: 10, bottom: 20, left: 80};
   var linedUpOuterHeight = 300;
   var linedUpHeight = linedUpOuterHeight - linedUpMargin.top - linedUpMargin.bottom;
   var linedUpDayScale = d3.time.scale()
@@ -361,11 +380,6 @@ VIZ.requiresData([
   var xExtent = d3.extent(d3.values(header), function (d) { return d[0]; });
   var minUnixSeconds = d3.min(d3.values(trips), function (d) { return d.begin; });
   var maxUnixSeconds = d3.max(d3.values(trips), function (d) { return d.end; });
-  trips.forEach(function (d) {
-    d.stops = d.stops || [];
-    var m = moment(d.begin*1000);
-    d.secs = m.diff(m.clone().startOf('day')) / 1000;
-  });
   var LINED_UP_STATIONS = [
     "place-alfcl",
     "place-asmnl",

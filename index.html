@@ -16,7 +16,7 @@
       </div>
       <div class="caption">
         <div class="sign">
-          <div class="sign-top red">
+          <div class="sign-top">
             <h1>A Month in the Life of the MBTA</h1>
           </div>
           <div class="sign-bottom">
@@ -61,7 +61,7 @@
         </table>
       </div>
 
-      <p>The visualization below shows all of these trips that trains took on the red, orange, and blue lines on Monday February 3, 2014. Each vertical line represents a station, and time extends from top to bottom.  Steeper lines indicate slower trains.  This visualization was first used by Étienne-Jules Marey and is typically called a “Marey Diagram”</p>
+      <p>To better understand how the trains operate, we show all trips that trains took on the red, orange, and blue lines on a single day, Monday February 3 2014.  Each vertical line represents a station, and time extends from top to bottom.  Steeper lines indicate slower trains.  This visualization was first used by Étienne-Jules Marey to visualize train schedules and is typically called a “Marey Diagram.”</p>
     </div>
   </div>
 
@@ -92,12 +92,16 @@
   <div class="full-width lined-up-marey-container">
     <div class="container">
       <p>
-        To better compare these individual trips, we line up the starting points and you can see the range of fastest to slowest trips, as well as variation.
-        See the
-        <a href="#" data-lo="7" data-hi="10" class="lined-up-highlight">morning rush-hour</a>, 
-        <a href="#" data-lo="10" data-hi="16" class="lined-up-highlight">midday lull</a>, 
-        <a href="#" data-lo="16" data-hi="19" class="lined-up-highlight">afternoon rush-hour</a>, and the
-        <a href="#" data-lo="19" data-hi="24" class="lined-up-highlight">evening lull</a>.
+        To better compare the individual trips on this day, we line up the starting points and you can see the range of fastest to slowest trips, as well as variation.
+        The trains slow down a little bit during the
+        <a href="#" data-lo="7" data-hi="10" class="lined-up-highlight">morning rush-hour</a>,
+        primarily on the outbound blue line.  The
+        <a href="#" data-lo="16" data-hi="19" class="lined-up-highlight">afternoon rush-hour</a>
+        is by-far the worst time of day for the red line.  The
+        <a href="#" data-lo="10" data-hi="16" class="lined-up-highlight">midday lull</a>
+        and
+        <a href="#" data-lo="19" data-hi="24" class="lined-up-highlight">evening lull</a>
+        are both fairly consistent.
       </p>
 
       <!-- Lined-up Marey -->
@@ -138,7 +142,7 @@
       <p>What causes these delays?  It’s hard to know for sure, but what we can determine is that delays usually happen when more people are riding the subway.  The next visualization shows this correlation.</p>
       
       <!-- figure out a graphic here that shows correllation between crowds and delay -->
-      <div class="placeholder interaction-all"></div>
+      <div class="interaction-all"></div>
       
       <p>But how do these crowds and delay typically affect you on your commute?  Choose the two stations you typically commute between on a line</p>
       
@@ -163,6 +167,7 @@
   <script type="text/javascript" src="bower_components/underscore/underscore.js"></script>
   <script type="text/javascript" src="bower_components/d3/d3.min.js"></script>
   <script type="text/javascript" src="bower_components/d3-tip/index.js"></script>
+  <script type="text/javascript" src="bower_components/d3-plugins/horizon/horizon.js"></script>
   <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
   <script type="text/javascript" src="scripts/first.js"></script>
   <script type="text/javascript" src="scripts/files.js"></script>
@@ -170,5 +175,6 @@
   <script type="text/javascript" src="scripts/header.js"></script>
   <script type="text/javascript" src="scripts/marey.js"></script>
   <script type="text/javascript" src="scripts/turnstile.js"></script>
+  <script type="text/javascript" src="scripts/delay.js"></script>
 </body>
 </html>
