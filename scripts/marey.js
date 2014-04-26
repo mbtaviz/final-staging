@@ -43,7 +43,7 @@ VIZ.requiresData([
     },
     {
       time: '2014/02/03 17:00',
-      text: 'A slow train leaving JFK/UMASS Station at 5PM causes delays on trains after (below) it for over an hour.  Notice how this causes delays in the other direction as well, as trains immediately arrive at Alewife then turn around to go south.',
+      text: 'A disabled train at Broadway causes delays on trains after (below) it for over an hour.  Notice how this causes delays in the other direction as well, as trains immediately arrive at Alewife then turn around to go south.',
       connections: [{
         start: '2014/02/03 17:02',
         stop: '2014/02/03 18:07',
