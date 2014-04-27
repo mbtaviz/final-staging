@@ -523,10 +523,13 @@ circle.hover {
   stroke-width: 0.2;
   stroke: black;
 }
-.interaction-all .indicator {
+.interaction-all .indicator line {
   stroke: black;
   stroke-width: 1px;
   shape-rendering: crispEdges;
+}
+.interaction-all .indicator text {
+  font-size: 10px;
 }
 .interaction-all svg {
   clear: none;
@@ -537,4 +540,13 @@ circle.hover {
 .interaction-all rect.delay-rect {
   shape-rendering: crispEdges;
   stroke: none;
+}
+.interaction-all .daylabel {
+  font-size: 14px;
+  font-weight: bold;
+  shape-rendering: crispEdges;
+}
+.interaction-all .dayofmonthlabel {
+  font-size: 12px;
+  shape-rendering: crispEdges;
 }

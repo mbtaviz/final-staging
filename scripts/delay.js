@@ -11,7 +11,7 @@ VIZ.requiresData([
   d3.select(".interaction-all").text('Error loading delay data').style('text-align', 'center');
 }).done(function (delay, network, spider, averageActualDelays) {
   "use strict";
-  var bottomMargin = {top: 20,right: 50,bottom: 10,left: 10};
+  var bottomMargin = {top: 20,right: 50,bottom: 10,left: 40};
   var glyphMargin = {top: 20,right: 20, bottom: 20,left: 20};
   var glyphOuterHeight = 300;
   var glyphOuterWidth = 300
@@ -68,19 +68,34 @@ VIZ.requiresData([
       .attr('width', bottomOuterWidth)
       .attr('height', bottomOuterHeight)
     .append('g')
-      .attr('transform', 'translate(' + (bottomMargin.left) + ',' + (bottomMargin.top) + ')');
+      .attr('transform', 'translate(' + 0 + ',' + (bottomMargin.top) + ')');
 
   var days = d3.range(0, 7);
   var rowScale = d3.scale.ordinal()
-      .domain(days)
-      .rangeRoundBands([0, bottomHeight], 0.1);
+      .domain([1, 2, 3, 4, 5, 6, 0])
+      .rangeRoundBands([0, bottomHeight], 0.3);
 
-  var rows = bottom.selectAll('.row')
+  var outerRow = bottom.selectAll('.row')
       .data(days)
       .enter()
     .append('g')
-      .attr('class', 'row')
-      .attr('transform', function (d) { return 'translate(0,' + rowScale(d) + ')'; });
+      .attr('class', 'row');
+
+  var rows = outerRow.append('g')
+      .attr('transform', function (d) { return 'translate(' + bottomMargin.left + ',' + rowScale(d) + ')'; });
+
+  var rowLabels = outerRow.append('g')
+      .attr('transform', function (d) { return 'translate(' + (bottomMargin.left / 2) + ',' + rowScale(d) + ')'; });
+  rowLabels.append('text')
+    .attr('class', 'daylabel')
+    .attr('dy', rowScale.rangeBand() - 15)
+    .attr('text-anchor', 'middle')
+    .text(function (d) { return moment.weekdaysShort()[d]; });
+  rowLabels.append('text')
+    .attr('class', 'dayofmonthlabel')
+    .attr('dy', rowScale.rangeBand() - 2)
+    .attr('text-anchor', 'middle')
+    .text(function (d) { return 'Feb ' + (2 + (d === 0 ? 7 : d)); });
 
   ////////////////////////////// draw the row data
   var horizonType = 'ins_total';
@@ -99,6 +114,7 @@ VIZ.requiresData([
     .ticks(d3.time.hours, 2);
   var axisContainer = bottom.append('g')
     .attr('class', 'x axis')
+    .attr('transform', 'translate(' + bottomMargin.left + ',0)')
     .call(timeAxis);
   var horizon = d3.horizon()
       .width(horizonWidth)
@@ -204,36 +220,33 @@ VIZ.requiresData([
 
   d3.select('.interaction-all').on('mousemove', mouseover);
 
-  var bar = bottom.append('g')
+  var bar = bottom.append('g').attr('class', 'indicator');
   bar.append('line')
-    .attr('class', 'indicator')
     .attr('x1', 0)
     .attr('x2', 0)
-    .attr('y1', 0)
-    .attr('y2', rowScale.rangeBand());
-  var timeDisplay = bar.append('text').attr('dx', -3).attr('dy', 24).attr('text-anchor', 'end');
-  var dayDisplay = bar.append('text').attr('dx', -3).attr('dy', 12).attr('text-anchor', 'end');
-  var insDisplay = bar.append('text').attr('dx', 3).attr('dy', 24).attr('text-anchor', 'beginning');
-  var delayDisplay = bar.append('text').attr('dx', 3).attr('dy', 12).attr('text-anchor', 'beginning');
+    .attr('y1', -10)
+    .attr('y2', rowScale.rangeBand() + 10);
+  var timeDisplay = bar.append('text').attr('dx', -3).attr('dy', -1).attr('text-anchor', 'end');
+  var insDisplay = bar.append('text').attr('dx', 3).attr('dy', -1).attr('text-anchor', 'beginning');
+  var delayDisplay = bar.append('text').attr('dx', 3).attr('dy', rowScale.rangeBand() + 10).attr('text-anchor', 'beginning');
   var bisect = d3.bisector(function (d) { return d.msOfDay; }).left;
   var bucketSize = 15*60*1000;
   function mouseover() {
-    var x = d3.mouse(bottom.node())[0];
+    var x = d3.mouse(bottom.node())[0] - bottomMargin.left;
     var y = d3.mouse(bottom.node())[1];
-    if (y < 0 || x < 0) { return; }
-    var day = Math.max(0, d3.bisectLeft(rowScale.range(), y) - 1);
+    if (y < 0 || x < bottomMargin.top) { return; }
+    var day = Math.max(1, d3.bisectLeft(rowScale.range(), y)) % 7;
     var theTime = timeScale.invert(x).getTime();
     x = timeScale(theTime);
     y = rowScale(day);
-    bar.attr('transform', 'translate(' + x + ',' + y + ')');
+    bar.attr('transform', 'translate(' + (x+bottomMargin.left) + ',' + y + ')');
     timeDisplay.text(moment(theTime).utc().format('h:mm a'));
-    dayDisplay.text(moment.weekdaysShort()[day]);
     var inputData = byDay[day];
     delays = {};
-    var idx = bisect(inputData, theTime / 1000) -2;
+    var idx = bisect(inputData, theTime / 1000) - 1;
     var ratio = (theTime % bucketSize) / bucketSize;
     var before = inputData[idx] || {outs:{}, ins:{},lines:[]};
-    var after = inputData[idx+1] || {outs: {}, ins:{},lines:[]};
+    var after = inputData[idx+1] || before;
     entrances = d3.interpolate(before.ins, after.ins)(ratio);
     insDisplay.text(d3.format('f')(d3.interpolate(before.ins_total, after.ins_total)(ratio)) + " entries/min");
     var delay = d3.interpolate(before.delay_actual, after.delay_actual)(ratio)
