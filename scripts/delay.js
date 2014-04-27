@@ -175,7 +175,7 @@ VIZ.requiresData([
     .attr('y2', height);
   var time = bar.append('text').attr('dx', 0).attr('dy', 12).attr('text-anchor', 'middle');
   var byDay = _.toArray(_.groupBy(delay.overTime, 'day'));
-  var bisect = d3.bisector(function (d) { return d.msOfDay; }).right;
+  var bisect = d3.bisector(function (d) { return d.msOfDay; }).left;
   function mouseover() {
     var x = d3.mouse(axisContainer.node())[0];
     var theTime = timeScale.invert(x).getTime();
@@ -184,7 +184,7 @@ VIZ.requiresData([
     time.text(moment(theTime).utc().format('h:mm a'));
     byDay.forEach(function (inputData, day) {
       delays[day] = delays[day] || {};
-      var idx = bisect(inputData, theTime / 1000);
+      var idx = bisect(inputData, theTime / 1000) - 1;
       var data = inputData[idx];
       entrances[day] = data.ins;
       data.lines.forEach(function (datum) {
