@@ -31,6 +31,10 @@ VIZ.requiresData([
     .y(function(d) { return d[1]; })
     .interpolate("linear");
 
+  delay.sort(function (a, b) {
+    return d3.ascending(a.msOfDay, b.msOfDay);
+  });
+
   window.delay = delay;
 
   ////////////////////////////// pre-process the data
@@ -103,7 +107,7 @@ VIZ.requiresData([
       .bands(3)
       .mode("offset")
       .interpolate("basis");
-  horizon.color.domain([-4, 0, 4]).range(['black', 'white', 'black']);
+  horizon.color.domain([-4, 0, 4]).range(['#555', 'white', '#555']);
   var horizons = rows.append('g')
       .attr('class', 'horizon-row')
       .attr('transform', 'translate(' + horizonMargin.left + ',' + horizonMargin.top + ')');
@@ -117,7 +121,6 @@ VIZ.requiresData([
           _.chain(delay)
             .where({day: d})
             .filter(function (t) { return typeof (t[horizonType]) === 'number'; })
-            .sortBy('msOfDay')
             .map(function (t) { return [t.msOfDay, scale(t[horizonType])]; })
             .value()
         ];
@@ -143,7 +146,7 @@ VIZ.requiresData([
 
   var delayMapColorScale = d3.scale.linear()
       .interpolate(d3.interpolateLab)
-      .domain([-0.2, 0, 0.2])
+      .domain([-0.2, 0, 0.4])
       .range(['rgb(0, 104, 55)', 'rgb(255, 255, 255)', 'rgb(165, 0, 38)']);
 
   var delayMapXScale = d3.scale.linear()
@@ -151,7 +154,7 @@ VIZ.requiresData([
       .range(["0%", "100%"]);
 
   gradient.selectAll('stop')
-      .data(function (d) { return _.sortBy(d, 'msOfDay'); })
+      .data(function (d) { return d; })
       .enter()
     .append("svg:stop")
       .attr("offset", function (d) { return delayMapXScale(d.msOfDay + 60 * 7.5); })
@@ -208,9 +211,12 @@ VIZ.requiresData([
     .attr('x2', 0)
     .attr('y1', 0)
     .attr('y2', rowScale.rangeBand());
-  var time = bar.append('text').attr('dx', 3).attr('dy', 12).attr('text-anchor', 'beginning');
+  var timeDisplay = bar.append('text').attr('dx', -3).attr('dy', 24).attr('text-anchor', 'end');
+  var dayDisplay = bar.append('text').attr('dx', -3).attr('dy', 12).attr('text-anchor', 'end');
+  var insDisplay = bar.append('text').attr('dx', 3).attr('dy', 24).attr('text-anchor', 'beginning');
+  var delayDisplay = bar.append('text').attr('dx', 3).attr('dy', 12).attr('text-anchor', 'beginning');
   var bisect = d3.bisector(function (d) { return d.msOfDay; }).left;
-  var bucketSize = 15*60*60*1000;
+  var bucketSize = 15*60*1000;
   function mouseover() {
     var x = d3.mouse(bottom.node())[0];
     var y = d3.mouse(bottom.node())[1];
@@ -220,15 +226,23 @@ VIZ.requiresData([
     x = timeScale(theTime);
     y = rowScale(day);
     bar.attr('transform', 'translate(' + x + ',' + y + ')');
-    time.text(moment(theTime).utc().format('h:mm a'));
+    timeDisplay.text(moment(theTime).utc().format('h:mm a'));
+    dayDisplay.text(moment.weekdaysShort()[day]);
     var inputData = byDay[day];
     delays = {};
     var idx = bisect(inputData, theTime / 1000) -2;
-    var ratio = (theTime - Math.floor(theTime/bucketSize) * bucketSize) / bucketSize;
+    var ratio = (theTime % bucketSize) / bucketSize;
     var before = inputData[idx] || {outs:{}, ins:{},lines:[]};
     var after = inputData[idx+1] || {outs: {}, ins:{},lines:[]};
     entrances = d3.interpolate(before.ins, after.ins)(ratio);
-    exits = d3.interpolate(before.outs, after.outs)(ratio);
+    insDisplay.text(d3.format('f')(d3.interpolate(before.ins_total, after.ins_total)(ratio)) + " entries/min");
+    var delay = d3.interpolate(before.delay_actual, after.delay_actual)(ratio)
+    if (delay < 0) {
+      delayDisplay.text(d3.format('%')(-delay) + " fast");
+    } else {
+      delayDisplay.text(d3.format('%')(delay) + " slow");
+    }
+    // exits = d3.interpolate(before.outs, after.outs)(ratio);
     var lines = d3.interpolate(before.lines, after.lines)(ratio);
     lines.forEach(function (datum) {
       var line = datum.line;
