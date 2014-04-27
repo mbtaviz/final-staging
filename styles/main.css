@@ -484,6 +484,7 @@ circle.hover {
 }
 .section-people rect {
   stroke: none;
+  shape-rendering: crispEdges;
 }
 .section-people .station {
   text-anchor: middle;
@@ -510,6 +511,7 @@ circle.hover {
 }
 .section-people line.highlight {
   stroke-width: 1px;
+  stroke-dasharray: 2,2;
 }
 .section-people rect.highlight {
   stroke-width: 2px;
@@ -525,4 +527,14 @@ circle.hover {
   stroke: black;
   stroke-width: 1px;
   shape-rendering: crispEdges;
+}
+.interaction-all svg {
+  clear: none;
+}
+.interaction-all .horizon path {
+  stroke: none;
+}
+.interaction-all rect.delay-rect {
+  shape-rendering: crispEdges;
+  stroke: none;
 }

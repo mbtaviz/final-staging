@@ -1,28 +1,37 @@
 VIZ.requiresData([
   'json!data/delay.json',
   'json!data/station-network.json',
-  'json!data/spider.json'
+  'json!data/spider.json',
+  'json!data/average-actual-delays.json'
 ]).progress(function (percent) {
   "use strict";
   d3.selectAll(".interaction-all").text('Loading delay data... ' + percent + '%').style('text-align', 'center');
 }).onerror(function () {
   "use strict";
   d3.select(".interaction-all").text('Error loading delay data').style('text-align', 'center');
-}).done(function (delay, network, spider) {
+}).done(function (delay, network, spider, averageActualDelays) {
   "use strict";
-  var margin = {top: 20,right: 40,bottom: 10,left: 10};
-  var outerWidth = 700;
-  var outerHeight = 1000;
-  var height = outerHeight - margin.top - margin.bottom;
-  var width = outerWidth - margin.left - margin.right;
+  var bottomMargin = {top: 20,right: 50,bottom: 10,left: 10};
+  var glyphMargin = {top: 20,right: 20, bottom: 20,left: 20};
+  var glyphOuterHeight = 300;
+  var glyphOuterWidth = 300
+  var glyphWidth = glyphOuterWidth - glyphMargin.left - glyphMargin.right,
+      glyphHeight = glyphOuterHeight - glyphMargin.top - glyphMargin.bottom;
+  var bottomOuterWidth = 600;
+  var bottomOuterHeight = 300;
+  var bottomHeight = bottomOuterHeight - bottomMargin.top - bottomMargin.bottom;
+  var bottomWidth = bottomOuterWidth - bottomMargin.left - bottomMargin.right;
   var idToLine = {};
   var nodesById = {};
   var delays = {};
   var entrances = {};
+  var exits = {};
   var lineMapping = d3.svg.line()
     .x(function(d) { return d[0]; })
     .y(function(d) { return d[1]; })
     .interpolate("linear");
+
+  window.delay = delay;
 
   ////////////////////////////// pre-process the data
   network.links.forEach(function (link) {
@@ -43,18 +52,26 @@ VIZ.requiresData([
   var xRange = d3.extent(network.nodes, function (d) { return d.x; });
   var yRange = d3.extent(network.nodes, function (d) { return d.y; });
 
-  var svg = d3.select(".interaction-all").text("").append('svg')
-      .attr('width', outerWidth)
-      .attr('height', outerHeight)
+  var glyph = d3.select(".interaction-all").text("").append('svg')
+      .attr('class', 'breathing-glyph')
+      .attr('width', glyphOuterWidth)
+      .attr('height', glyphOuterHeight)
     .append('g')
-      .attr('transform', 'translate(' + (margin.left) + ',' + (margin.top) + ')');
+      .attr('transform', 'translate(' + (glyphMargin.left) + ',' + (glyphMargin.top) + ')');
+
+  var bottom = d3.select(".interaction-all").append('svg')
+      .attr('class', 'horizons')
+      .attr('width', bottomOuterWidth)
+      .attr('height', bottomOuterHeight)
+    .append('g')
+      .attr('transform', 'translate(' + (bottomMargin.left) + ',' + (bottomMargin.top) + ')');
 
   var days = d3.range(0, 7);
   var rowScale = d3.scale.ordinal()
       .domain(days)
-      .rangeRoundBands([0, height], 0.1);
+      .rangeRoundBands([0, bottomHeight], 0.1);
 
-  var rows = svg.selectAll('.row')
+  var rows = bottom.selectAll('.row')
       .data(days)
       .enter()
     .append('g')
@@ -62,21 +79,11 @@ VIZ.requiresData([
       .attr('transform', function (d) { return 'translate(0,' + rowScale(d) + ')'; });
 
   ////////////////////////////// draw the row data
-  var horizonTypes = [
-    'delay_actual',
-    // 'delay_mbta',
-    'ins_total'
-    // 'delay_actual_inbound',
-    // 'delay_actual_outbound',
-    // 'ins_total',
-    // 'outs_total'
-  ];
-  var horizonContainerMargin = {top: 30,right: 0,bottom: 30,left: 0};
-  var horizonScale = d3.scale.ordinal()
-      .domain(horizonTypes)
-      .rangeRoundBands([horizonContainerMargin.top, rowScale.rangeBand() - horizonContainerMargin.bottom], 0);
-  var horizonWidth = width - rowScale.rangeBand() - horizonContainerMargin.left - horizonContainerMargin.right;
-  var horizonHeight = horizonScale.rangeBand();
+  var horizonType = 'ins_total';
+  var delayMapHeight = 3;
+  var horizonMargin = {top: 0, right: 0, bottom: delayMapHeight, left: 0};
+  var horizonWidth = bottomWidth - horizonMargin.left - horizonMargin.right;
+  var horizonHeight = rowScale.rangeBand() - horizonMargin.top - horizonMargin.bottom;
   var timeScale = d3.time.scale()
     .domain([0, 24 * 60 * 60 * 1000])
     .range([0, horizonWidth])
@@ -86,12 +93,9 @@ VIZ.requiresData([
     .tickFormat(d3.time.format.utc("%-I%p"))
     .orient('top')
     .ticks(d3.time.hours, 2);
-  var axisContainer = svg.append('g')
+  var axisContainer = bottom.append('g')
     .attr('class', 'x axis')
-    .attr('transform', 'translate(' + (rowScale.rangeBand() + horizonContainerMargin.left) + ',0)')
     .call(timeAxis);
-  var horizonContainer = rows.append('g')
-    .attr('transform', 'translate(' + (rowScale.rangeBand() + horizonContainerMargin.left) + ',0)');
   var horizon = d3.horizon()
       .width(horizonWidth)
       .height(horizonHeight)
@@ -99,25 +103,22 @@ VIZ.requiresData([
       .bands(3)
       .mode("offset")
       .interpolate("basis");
-  horizon.color.domain([-3, -2, -1, 0, 1, 2, 3]).range(['red', '#888', '#ccc', 'white', '#ccc', '#888', 'red']);
-  var horizons = horizonContainer.selectAll('.horizon-row')
-      .data(function (day) { return horizonTypes.map(function (type) { return {type: type, day: day}; }); })
-      .enter()
-    .append('g')
+  horizon.color.domain([-4, -2, 0, 2, 4]).range(['red', '#aaa', 'white', '#aaa', 'red']);
+  var horizons = rows.append('g')
       .attr('class', 'horizon-row')
-      .attr('transform', function (d) { return 'translate(0,' + (horizonScale(d.type)) + ')'; });
+      .attr('transform', 'translate(' + horizonMargin.left + ',' + horizonMargin.top + ')');
 
-  horizons.selectAll('.the-horizon')
+  horizons.selectAll('.horizon')
       .data(function (d, i) {
-        var min = d3.min(delay.overTime, function (t) { return t[d.type]; });
-        var max = d3.max(delay.overTime, function (t) { return t[d.type]; });
+        var min = d3.min(delay, function (t) { return t[horizonType]; });
+        var max = d3.max(delay, function (t) { return t[horizonType]; });
         var scale = d3.scale.linear().domain([min, max]);
         return [
-          _.chain(delay.overTime)
-            .where({day: d.day})
-            .filter(function (t) { return typeof (t[d.type]) === 'number'; })
+          _.chain(delay)
+            .where({day: d})
+            .filter(function (t) { return typeof (t[horizonType]) === 'number'; })
             .sortBy('msOfDay')
-            .map(function (t) { return [t.msOfDay, d.type === 'ins_total' ? -scale(t[d.type]) : scale(t[d.type])]; })
+            .map(function (t) { return [t.msOfDay, scale(t[horizonType])]; })
             .value()
         ];
       })
@@ -126,11 +127,28 @@ VIZ.requiresData([
       .attr('class', 'horizon')
       .call(horizon);
 
-  ////////////////////////////// calculate glyph attributes
-  var glyphMargin = {top: 0,right: 0,bottom: 0,left: 10};
+  var byDay = _.toArray(_.groupBy(delay, 'day'));
+  var delayMapColorScale = d3.scale.linear()
+      .interpolate(d3.interpolateLab)
+      .domain([-0.2, 0, 0.2])
+      .range(['rgb(0, 104, 55)', 'rgb(255, 255, 191)', 'rgb(165, 0, 38)']);
+  var buckets = 24 * 4;
+  var delayMapXScale = d3.scale.linear()
+      .domain([0, 24 * 60 * 60])
+      .range([0, horizonWidth]);
+  horizons.append('g')
+      .attr('transform', 'translate(0,' + horizonHeight + ')')
+      .selectAll('.delay-rect')
+      .data(function (d) { return byDay[d]; })
+      .enter()
+    .append('rect')
+      .attr('class', 'delay-rect')
+      .attr('width', horizonWidth / buckets)
+      .attr('height', delayMapHeight)
+      .attr('x', function (d) { return delayMapXScale(d.msOfDay); })
+      .attr('fill', function (d) { return delayMapColorScale(d.delay_actual); })
 
-  var glyphWidth = rowScale.rangeBand() - glyphMargin.left - glyphMargin.right,
-      glyphHeight = rowScale.rangeBand() - glyphMargin.top - glyphMargin.bottom;
+  ////////////////////////////// calculate glyph attributes
 
   var xScale = glyphWidth / (xRange[1] - xRange[0]);
   var yScale = glyphHeight / (yRange[1] - yRange[0]);
@@ -144,7 +162,7 @@ VIZ.requiresData([
       .domain([1.2, 0.5, 0])
       .range(['white', 'black', 'red']);
   function colorFunc(d) {
-    var speed = (delays[d.day] || {})[d.ids];
+    var speed = delays[d.ids];
     var color;
     if (speed === null || typeof speed === 'undefined') {
       color = 'white';
@@ -162,61 +180,67 @@ VIZ.requiresData([
       .attr('class', 'd3-tip')
       .offset([-10, 0])
       .html(function(d) { return d.name; });
-  svg.call(tip);
+  glyph.call(tip);
 
   d3.select('.interaction-all').on('mousemove', mouseover);
 
-  var bar = axisContainer.append('g')
+  var bar = bottom.append('g')
   bar.append('line')
     .attr('class', 'indicator')
     .attr('x1', 0)
     .attr('x2', 0)
-    .attr('y1', 14)
-    .attr('y2', height);
-  var time = bar.append('text').attr('dx', 0).attr('dy', 12).attr('text-anchor', 'middle');
-  var byDay = _.toArray(_.groupBy(delay.overTime, 'day'));
+    .attr('y1', 0)
+    .attr('y2', rowScale.rangeBand());
+  var time = bar.append('text').attr('dx', 3).attr('dy', 12).attr('text-anchor', 'beginning');
   var bisect = d3.bisector(function (d) { return d.msOfDay; }).left;
+  var bucketSize = 15*60*60*1000;
   function mouseover() {
-    var x = d3.mouse(axisContainer.node())[0];
+    var x = d3.mouse(bottom.node())[0];
+    var y = d3.mouse(bottom.node())[1];
+    if (y < 0 || x < 0) { return; }
+    var day = Math.max(0, d3.bisectLeft(rowScale.range(), y) - 1);
     var theTime = timeScale.invert(x).getTime();
     x = timeScale(theTime);
-    bar.attr('transform', 'translate(' + x + ',0)');
+    y = rowScale(day);
+    bar.attr('transform', 'translate(' + x + ',' + y + ')');
     time.text(moment(theTime).utc().format('h:mm a'));
-    byDay.forEach(function (inputData, day) {
-      delays[day] = delays[day] || {};
-      var idx = bisect(inputData, theTime / 1000) - 1;
-      var data = inputData[idx];
-      entrances[day] = data.ins;
-      data.lines.forEach(function (datum) {
-        var line = datum.line;
-        var byPair = datum.delay_actual;
-        function update(FROM, TO) {
-          var key = FROM + "|" + TO;
-          if (byPair.hasOwnProperty(key)) {
-            var diff = byPair[key];
-            var median = delay.averageActualDelays[key];
-            var speed = median / diff;
-            delays[day][key] = speed;
-          } else if (line === idToLine[key]) {
-            delays[day][key] = null;
-          }
+    var inputData = byDay[day];
+    delays = {};
+    var idx = bisect(inputData, theTime / 1000) -2;
+    var ratio = (theTime - Math.floor(theTime/bucketSize) * bucketSize) / bucketSize;
+    var before = inputData[idx] || {outs:{}, ins:{},lines:[]};
+    var after = inputData[idx+1] || {outs: {}, ins:{},lines:[]};
+    entrances = d3.interpolate(before.ins, after.ins)(ratio);
+    exits = d3.interpolate(before.outs, after.outs)(ratio);
+    var lines = d3.interpolate(before.lines, after.lines)(ratio);
+    lines.forEach(function (datum) {
+      var line = datum.line;
+      var byPair = datum.delay_actual;
+      function update(FROM, TO) {
+        var key = FROM + "|" + TO;
+        if (byPair.hasOwnProperty(key)) {
+          var diff = byPair[key];
+          var median = averageActualDelays[key];
+          var speed = median / diff;
+          delays[key] = speed;
+        } else if (line === idToLine[key]) {
+          delays[key] = null;
         }
+      }
 
-        network.links.forEach(function (link) {
-          update(link.source.id, link.target.id);
-          update(link.target.id, link.source.id);
-        });
+      network.links.forEach(function (link) {
+        update(link.source.id, link.target.id);
+        update(link.target.id, link.source.id);
       });
-
     });
 
-    rows.selectAll('.connect path')
+    glyph.selectAll('.connect path')
       .attr('fill', colorFunc)
       .attr('d', lineFunction);
   }
 
   ////////////////////////////// Draw the glyphs
-  var lines = rows.selectAll('.connect')
+  var lines = glyph.selectAll('.connect')
       .data(function (d) { return network.links.map(function (link) { return { link: link, day: d }; })})
       .enter()
     .append('g')
@@ -227,12 +251,11 @@ VIZ.requiresData([
     .append('path')
       .datum(function (d) {
         return {
-          incoming: getEntering(d.link.source, d.day),
+          incoming: getEntering(d.link.source),
           line: d.link.line,
-          day: d.day,
           ids: d.link.source.id + '|' + d.link.target.id,
           segment: [d.link.source.pos, d.link.target.pos],
-          outgoing: getLeaving(d.link.target, d.day),
+          outgoing: getLeaving(d.link.target),
           name: d.link.source.name + " to " + d.link.target.name
         };
       })
@@ -246,12 +269,11 @@ VIZ.requiresData([
     .append('path')
       .datum(function (d) {
         return {
-          incoming: getEntering(d.link.target, d.day),
+          incoming: getEntering(d.link.target),
           line: d.link.line,
-          day: d.day,
           ids: d.link.target.id + '|' + d.link.source.id,
           segment: [d.link.target.pos, d.link.source.pos],
-          outgoing: getLeaving(d.link.source, d.day),
+          outgoing: getLeaving(d.link.source),
           name: d.link.target.name + " to " + d.link.source.name
         };
       })
@@ -302,7 +324,7 @@ VIZ.requiresData([
 
   // line color circles
   function dot(id, color) {
-    rows.append('circle')
+    glyph.append('circle')
       .attr('cx', scale * spider[id][0])
       .attr('cy', scale * spider[id][1])
       .attr('fill', color)
@@ -373,8 +395,7 @@ VIZ.requiresData([
   }
   function offsetPoints(d) {
     var split = d.ids.split("|").map(function (a) {
-      if (typeof d.day !== 'number') { console.log(d); throw ""; }
-      var val = (entrances[d.day] || {})[a];
+      var val = entrances[a];
       return distScale(val || 0);
     });
     var p1 = d.segment[0];
