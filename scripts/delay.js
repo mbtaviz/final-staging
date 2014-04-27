@@ -80,7 +80,7 @@ VIZ.requiresData([
 
   ////////////////////////////// draw the row data
   var horizonType = 'ins_total';
-  var delayMapHeight = 3;
+  var delayMapHeight = 5;
   var horizonMargin = {top: 0, right: 0, bottom: delayMapHeight, left: 0};
   var horizonWidth = bottomWidth - horizonMargin.left - horizonMargin.right;
   var horizonHeight = rowScale.rangeBand() - horizonMargin.top - horizonMargin.bottom;
@@ -103,7 +103,7 @@ VIZ.requiresData([
       .bands(3)
       .mode("offset")
       .interpolate("basis");
-  horizon.color.domain([-4, -2, 0, 2, 4]).range(['red', '#aaa', 'white', '#aaa', 'red']);
+  horizon.color.domain([-4, 0, 4]).range(['black', 'white', 'black']);
   var horizons = rows.append('g')
       .attr('class', 'horizon-row')
       .attr('transform', 'translate(' + horizonMargin.left + ',' + horizonMargin.top + ')');
@@ -127,26 +127,43 @@ VIZ.requiresData([
       .attr('class', 'horizon')
       .call(horizon);
 
+
   var byDay = _.toArray(_.groupBy(delay, 'day'));
+  var buckets = 24 * 4;
+  var gradient = bottom.append("svg:defs").selectAll('linearGradient')
+      .data(byDay)
+      .enter()
+    .append("svg:linearGradient")
+      .attr("id", function (d, i) { return "gradient" + i; })
+      .attr("x1", "0%")
+      .attr("y1", "0%")
+      .attr("x2", "100%")
+      .attr("y2", "0%")
+      .attr("spreadMethod", "pad");
+
   var delayMapColorScale = d3.scale.linear()
       .interpolate(d3.interpolateLab)
       .domain([-0.2, 0, 0.2])
-      .range(['rgb(0, 104, 55)', 'rgb(255, 255, 191)', 'rgb(165, 0, 38)']);
-  var buckets = 24 * 4;
+      .range(['rgb(0, 104, 55)', 'rgb(255, 255, 255)', 'rgb(165, 0, 38)']);
+
   var delayMapXScale = d3.scale.linear()
       .domain([0, 24 * 60 * 60])
-      .range([0, horizonWidth]);
-  horizons.append('g')
-      .attr('transform', 'translate(0,' + horizonHeight + ')')
-      .selectAll('.delay-rect')
-      .data(function (d) { return byDay[d]; })
+      .range(["0%", "100%"]);
+
+  gradient.selectAll('stop')
+      .data(function (d) { return _.sortBy(d, 'msOfDay'); })
       .enter()
-    .append('rect')
+    .append("svg:stop")
+      .attr("offset", function (d) { return delayMapXScale(d.msOfDay + 60 * 7.5); })
+      .attr("stop-color", function (d) { return delayMapColorScale(d.delay_actual); })
+      .attr("stop-opacity", 1);
+
+  horizons.append('rect')
       .attr('class', 'delay-rect')
-      .attr('width', horizonWidth / buckets)
+      .attr('y', horizonHeight)
+      .attr('width', horizonWidth)
       .attr('height', delayMapHeight)
-      .attr('x', function (d) { return delayMapXScale(d.msOfDay); })
-      .attr('fill', function (d) { return delayMapColorScale(d.delay_actual); })
+      .attr('fill', function (d) { return "url(#gradient" + d + ")"; })
 
   ////////////////////////////// calculate glyph attributes
 
