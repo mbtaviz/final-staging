@@ -11,7 +11,7 @@ VIZ.requiresData([
   d3.select(".interaction-all").text('Error loading delay data').style('text-align', 'center');
 }).done(function (delay, network, spider, averageActualDelays) {
   "use strict";
-  var bottomMargin = {top: 20,right: 50,bottom: 10,left: 40};
+  var bottomMargin = {top: 20,right: 70,bottom: 10,left: 50};
   var glyphMargin = {top: 20,right: 20, bottom: 20,left: 20};
   var glyphOuterHeight = 300;
   var glyphOuterWidth = 300
@@ -99,7 +99,7 @@ VIZ.requiresData([
 
   ////////////////////////////// draw the row data
   var horizonType = 'ins_total';
-  var delayMapHeight = 5;
+  var delayMapHeight = 7;
   var horizonMargin = {top: 0, right: 0, bottom: delayMapHeight, left: 0};
   var horizonWidth = bottomWidth - horizonMargin.left - horizonMargin.right;
   var horizonHeight = rowScale.rangeBand() - horizonMargin.top - horizonMargin.bottom;
@@ -194,9 +194,11 @@ VIZ.requiresData([
   var distScale = d3.scale.linear()
     .domain([0, 100])
     .range([0.15 * scale, 0.7 * scale]);
-  var colorScale = d3.scale.pow().exponent(2)
-      .domain([1.2, 0.5, 0])
-      .range(['white', 'black', 'red']);
+
+  var colorScale = d3.scale.linear()
+      .interpolate(d3.interpolateLab)
+      .domain([2, 0.9, 0.3])
+      .range(['rgb(0, 104, 55)', 'rgb(255, 255, 255)', 'rgb(165, 0, 38)']);
   function colorFunc(d) {
     var speed = delays[d.ids];
     var color;
@@ -234,7 +236,7 @@ VIZ.requiresData([
   function mouseover() {
     var x = d3.mouse(bottom.node())[0] - bottomMargin.left;
     var y = d3.mouse(bottom.node())[1];
-    if (y < 0 || x < bottomMargin.top) { return; }
+    if (y < 0 || x < 0) { return; }
     var day = Math.max(1, d3.bisectLeft(rowScale.range(), y)) % 7;
     var theTime = timeScale.invert(x).getTime();
     x = timeScale(theTime);
