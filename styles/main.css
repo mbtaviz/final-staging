@@ -516,8 +516,39 @@ circle.hover {
 .section-people rect.highlight {
   stroke-width: 2px;
 }
-.section-people rect:hover {
+.section-people .turnstile-total rect:hover,
+.section-people .turnstile-all rect:hover {
   fill: steelBlue !important;
+}
+.section-people .bar {
+  fill: #ccc;
+  shape-rendering: crispEdges;
+}
+.section-people .row:hover .bar {
+  fill: brown !important;
+}
+.section-people .connect {
+  stroke-width: 0.5;
+  stroke: black;
+}
+.section-people circle.station.middle {
+  fill: gray;
+  opacity: 0.3;
+}
+.section-people circle.station.end {
+  opacity: 1;
+}
+.section-people .viz {
+  text-align: center;
+}
+.section-people .left,
+.section-people .right {
+  clear: none;
+  display: inline-block;
+  vertical-align: top;
+}
+.section-people .left {
+  max-width: 400px;
 }
 .interaction-all {
   text-align: center;

@@ -6,5 +6,6 @@ VIZ.fileSizes = {
   "data/marey-trips.json": 818145,
   "data/spider.json": 2133,
   "data/station-network.json": 8830,
+  "data/turnstile-gtfs-mapping.json": 1644,
   "data/turnstile-heatmap.json": 2542709
 };
