@@ -202,7 +202,7 @@ VIZ.requiresData([
     hoveredTrip = d.trip;
     hover();
   }
-  var linedUpMargin = {top: 10, right: 10, bottom: 20, left: 80};
+  var linedUpMargin = {top: 25, right: 10, bottom: 20, left: 80};
   var linedUpOuterHeight = 300;
   var linedUpHeight = linedUpOuterHeight - linedUpMargin.top - linedUpMargin.bottom;
   var linedUpDayScale = d3.time.scale()
@@ -511,9 +511,24 @@ VIZ.requiresData([
       .outerTickSize(0)
       .scale(linedUpTimeScale)
       .orient("left");
-    linedUp.appendOnce('g', 'y axis')
+    var axis = linedUp.appendOnce('g', 'y axis')
       .call(linedUpAxis);
 
+    axis.appendOnce('text', 'label')
+      .attr('transform', 'rotate(90)translate(' + (linedUpHeight/2) + ',-5)')
+      .attr('text-anchor', 'middle')
+      .text('minutes since start of trip')
+
+    linedUp.appendOnce('text', 'top-label')
+      .text('Starting Station')
+      .attr('text-anchor', 'middle')
+      .attr('x', linedUpWidth /2)
+      .attr('y', -14);
+    linedUp.appendOnce('text', 'bottom-label')
+      .text('Ending Station')
+      .attr('text-anchor', 'middle')
+      .attr('x', linedUpWidth /2)
+      .attr('y', linedUpHeight);
     var stationHeaders = linedUp.selectAll('.station-header')
         .data(LINED_UP_STATIONS.filter(function (d) { return LINED_UP_ANCHORS[d].text; }));
     stationHeaders

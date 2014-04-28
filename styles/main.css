@@ -442,7 +442,7 @@ circle.hover {
   opacity: 1;
 }
 .lined-up-marey .y.axis .tick line {
-  stroke: #ccc;
+  stroke: #eee;
 }
 .lined-up-marey .mareyline {
   opacity: 0.1;
