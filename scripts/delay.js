@@ -5,12 +5,13 @@ VIZ.requiresData([
   'json!data/average-actual-delays.json'
 ]).progress(function (percent) {
   "use strict";
-  d3.selectAll(".interaction-all").text('Loading delay data... ' + percent + '%').style('text-align', 'center');
+  d3.selectAll(".interaction-all .loading").text('Loading delay data... ' + percent + '%').style('text-align', 'center');
 }).onerror(function () {
   "use strict";
-  d3.select(".interaction-all").text('Error loading delay data').style('text-align', 'center');
+  d3.select(".interaction-all .loading").text('Error loading delay data').style('text-align', 'center');
 }).done(function (delay, network, spider, averageActualDelays) {
   "use strict";
+  d3.select(".interaction-all .loading").remove();
   var bottomMargin = {top: 20,right: 70,bottom: 10,left: 50};
   var glyphMargin = {top: 20,right: 20, bottom: 20,left: 20};
   var glyphOuterHeight = 300;
@@ -56,14 +57,19 @@ VIZ.requiresData([
   var xRange = d3.extent(network.nodes, function (d) { return d.x; });
   var yRange = d3.extent(network.nodes, function (d) { return d.y; });
 
-  var glyph = d3.select(".interaction-all").text("").append('svg')
-      .attr('class', 'breathing-glyph')
+  var glyph = d3.select(".interaction-all .left").append('svg')
+      .attr('class', 'breathing-glyph dimmable')
       .attr('width', glyphOuterWidth)
       .attr('height', glyphOuterHeight)
     .append('g')
       .attr('transform', 'translate(' + (glyphMargin.left) + ',' + (glyphMargin.top) + ')');
 
-  var bottom = d3.select(".interaction-all").append('svg')
+  var timeDisplay2 = glyph.append('text')
+    .attr('x', glyphWidth / 2)
+    .attr('y', glyphHeight + 20)
+    .attr('text-anchor', 'middle');
+
+  var bottom = d3.select(".interaction-all .right").append('svg')
       .attr('class', 'horizons')
       .attr('width', bottomOuterWidth)
       .attr('height', bottomOuterHeight)
@@ -85,6 +91,7 @@ VIZ.requiresData([
       .attr('transform', function (d) { return 'translate(' + bottomMargin.left + ',' + rowScale(d) + ')'; });
 
   var rowLabels = outerRow.append('g')
+      .attr('class', function (d) { return 'dimmable day-' + d; })
       .attr('transform', function (d) { return 'translate(' + (bottomMargin.left / 2) + ',' + rowScale(d) + ')'; });
   rowLabels.append('text')
     .attr('class', 'daylabel')
@@ -133,17 +140,19 @@ VIZ.requiresData([
         var min = d3.min(delay, function (t) { return t[horizonType]; });
         var max = d3.max(delay, function (t) { return t[horizonType]; });
         var scale = d3.scale.linear().domain([min, max]);
-        return [
+        var result = [
           _.chain(delay)
             .where({day: d})
             .filter(function (t) { return typeof (t[horizonType]) === 'number'; })
             .map(function (t) { return [t.msOfDay, scale(t[horizonType])]; })
             .value()
         ];
+        result[0].day = d;
+        return result;
       })
       .enter()
     .append('g')
-      .attr('class', 'horizon')
+      .attr('class', function (d) { return 'horizon dimmable day-' + d.day; })
       .call(horizon);
 
 
@@ -178,7 +187,7 @@ VIZ.requiresData([
       .attr("stop-opacity", 1);
 
   horizons.append('rect')
-      .attr('class', 'delay-rect')
+      .attr('class', function (d) { return 'delay-rect dimmable day-' + d; })
       .attr('y', horizonHeight)
       .attr('width', horizonWidth)
       .attr('height', delayMapHeight)
@@ -197,7 +206,7 @@ VIZ.requiresData([
 
   var colorScale = d3.scale.linear()
       .interpolate(d3.interpolateLab)
-      .domain([2, 0.9, 0.3])
+      .domain([2, 1, 0.3])
       .range(['rgb(0, 104, 55)', 'rgb(255, 255, 255)', 'rgb(165, 0, 38)']);
   function colorFunc(d) {
     var speed = delays[d.ids];
@@ -220,9 +229,32 @@ VIZ.requiresData([
       .html(function(d) { return d.name; });
   glyph.call(tip);
 
-  d3.select('.interaction-all').on('mousemove', mouseover);
+  d3.select('.interaction-all .viz').on('mousemove', mouseover);
+  d3.selectAll('.interaction-all a.highlight')
+    .on('click', function () {
+      d3.event.preventDefault();
+    })
+    .on('mouseover', function () {
+      var selector = d3.select(this).attr('data-highlight');
+      d3.selectAll('.interaction-all .viz').selectAll(selector).classed('active', true);
+      d3.selectAll('.interaction-all .viz').classed('highlighting', true);
+    })
+    .on('mouseout', function () {
+      d3.selectAll('.interaction-all .viz .active').classed('active', false);
+      d3.selectAll('.interaction-all .viz').classed('highlighting', false);
+    });
+  d3.selectAll('.interaction-all a.set-time')
+    .on('click', function () {
+      d3.event.preventDefault();
+    })
+    .on('mouseover', function () {
+      var day = +d3.select(this).attr('data-day');
+      var time = d3.select(this).attr('data-time');
+      var ms = moment(time + ' -0400', 'hh:mm a Z').diff(moment(time + ' -0400', 'hh:mm a Z').startOf('day'));
+      mouseoverTime(day, ms);
+    });
 
-  var bar = bottom.append('g').attr('class', 'indicator');
+  var bar = bottom.append('g').attr('class', 'indicator dimmable').attr('transform', 'translate(-100,0)');
   bar.append('line')
     .attr('x1', 0)
     .attr('x2', 0)
@@ -239,15 +271,22 @@ VIZ.requiresData([
     if (y < 0 || x < 0) { return; }
     var day = Math.max(1, d3.bisectLeft(rowScale.range(), y)) % 7;
     var theTime = timeScale.invert(x).getTime();
-    x = timeScale(theTime);
-    y = rowScale(day);
+    mouseoverTime(day, theTime);
+  }
+
+  function mouseoverTime(day, theTime) {
+    var x = timeScale(theTime);
+    var y = rowScale(day);
     bar.attr('transform', 'translate(' + (x+bottomMargin.left) + ',' + y + ')');
     timeDisplay.text(moment(theTime).utc().format('h:mm a'));
+    var fullTime = moment(theTime).utc().format('h:mm a') + ' on ' + moment.weekdaysShort()[day] + ' Feb ' + (day ? day + 2 : 9);
+    timeDisplay2.text(fullTime);
+    d3.select('.interaction-all .time').text(fullTime);
     var inputData = byDay[day];
     delays = {};
     var idx = bisect(inputData, theTime / 1000) - 1;
     var ratio = (theTime % bucketSize) / bucketSize;
-    var before = inputData[idx] || {outs:{}, ins:{},lines:[]};
+    var before = inputData[idx] || inputData[idx+1];
     var after = inputData[idx+1] || before;
     entrances = d3.interpolate(before.ins, after.ins)(ratio);
     insDisplay.text(d3.format('f')(d3.interpolate(before.ins_total, after.ins_total)(ratio)) + " entries/min");

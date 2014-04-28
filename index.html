@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
   <meta name="viewport" content="width=700">
-  <title>A Month in the Life of the MBTA</title>
+  <title>Visualizing the T</title>
 
   <link href='styles/main.css' rel='stylesheet' type='text/css'>
 </head>
@@ -139,17 +139,47 @@
     <div class="container">
       <h2>How People and Trains Affect Each Other</h2>
       <p>When you look back at the Marey diagram, the slope of each line tells you how fast a train is going and the time it takes to get between stations.  When all of the start and stop times are lined up you can see a drastic variation in the time it takes to get between stops throughout the day.  If you have ever ridden the subway during rush hour then you have experienced what the steep lines in the Marey diagram feel like first-hand.</p>
-      <p>What causes these delays?  It’s hard to know for sure, but what we can determine is that delays usually happen when more people are riding the subway.  The next visualization shows this correlation.</p>
+      <p>What causes these delays?  It’s hard to know for sure, but what we can determine is that delays usually happen when more people are riding the subway.</p>
+
     </div>
     
-    <div class="interaction-all"></div>
-    
-    <div class="container">
-      <p>But how do these crowds and delay typically affect you on your commute?  Choose the two stations you typically commute between on a line</p>
-      
-      <!-- figure out graphic here that shows variation on someone's commute -->
-      <div class="placeholder interaction-specific"></div>
-
+    <div class="interaction-all">
+      <div class="container text-center">
+        <h3>One Week of Congestion and Delay</h3>
+      </div>
+      <div class="loading"></div>
+      <div class="viz">
+        <div class="left">
+          <div class="glyph"></div>
+        </div>
+        <div class="right">
+        </div>
+      </div>
+      <div class="container">
+        <p>
+          This visualization shows congestion and delay on the red, blue, and orange lines for a week in February. The <a href="#" class="highlight" data-highlight=".horizon">gray charts</a> show the total number of entries into the all stations per minute over time for each day of the week.  The <a href="#" class="highlight" data-highlight=".delay-rect">colored bands</a> below indicate whether the trains are on average <span class="legend-fast">faster</span> or <span class="legend-slow">slower</span> than normal. 
+        </p>
+        <p>
+          The <a href="#" class="highlight" data-highlight=".breathing-glyph">map</a> shows the congestion and delay across the system at a time when you hover over the chart on the right.  The thickness of each line at a stop indicates number of entries per minute at that stop, and the color indicates delay using the same scale as the <a href="#" class="highlight" data-highlight=".delay-rect">colored bands</a>.
+        </p>
+        <p>
+          You can see basketball games letting out on
+          <a href="#" class="set-time" data-day="1" data-time="11:03 pm">Monday</a>,
+          <a href="#" class="set-time" data-day="2" data-time="10:00 pm">Tuesday</a>,
+          <a href="#" class="set-time" data-day="5" data-time="10:15 pm">Friday</a>, and
+          <a href="#" class="set-time" data-day="0" data-time="8:21 pm">Sunday</a>.
+          You can also tell that it snowed on
+          <a href="#" class="highlight" data-highlight=".day-3">Wednesday</a>
+          especially when you compare 
+          <a href="#" class="set-time" data-day="3" data-time="5:09 pm">Wednesday evening's rush hour</a>
+          to 
+          <a href="#" class="set-time" data-day="4" data-time="5:09 pm">Thursday evening's rush hour</a>.
+        </p>
+        <p>
+        </p>
+        <p>
+        </p>
+      </div>
     </div>
   </div>
 
@@ -157,8 +187,7 @@
   <div class="full-width section-conclusion">
     <div class="container">
       <h2>Summary</h2>
-      <p>Through publicly available data, we have the tools to understand the subway system better than we ever have before.  We have seen how the system operates on a daily basis, how people use the system and how that affects the trains, and how the trains and people affect you.</p>
-      <p>Through our analysis and the realtime data feeds, you can also take these insights with you whenever you ride the train.  Bookmark <a href="https://mbta.meteor.com" target="_blank">mbta.meteor.com</a> on your mobile phone phone and you can check it any time to see up-to-the-minute congestion and delay information.</p>
+      <p>Through publicly available data, we have the tools to understand the subway system better than we ever have before.  We have seen how the system operates on a daily basis, how people use the system and how that affects the trains.  To see how this affects you on a daily basis, you can take these insights with you whenever you ride the train.  Bookmark <a href="https://mbta.meteor.com" target="_blank">mbta.meteor.com</a> on your mobile phone phone and you can check it any time to see up-to-the-minute congestion and delay.</p>
     </div>
   </div>
 

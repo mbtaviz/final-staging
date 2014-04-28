@@ -519,6 +519,9 @@ circle.hover {
 .section-people rect:hover {
   fill: steelBlue !important;
 }
+.interaction-all {
+  text-align: center;
+}
 .interaction-all path {
   stroke-width: 0.2;
   stroke: black;
@@ -531,8 +534,37 @@ circle.hover {
 .interaction-all .indicator text {
   font-size: 10px;
 }
-.interaction-all svg {
+.interaction-all .viz.highlighting .dimmable {
+  opacity: 0.1;
+}
+.interaction-all .viz.highlighting .active {
+  opacity: 1;
+}
+.interaction-all .legend-fast {
+  background-color: #006837;
+}
+.interaction-all .legend-slow {
+  background-color: #a50026;
+}
+.interaction-all .legend-fast,
+.interaction-all .legend-slow {
+  color: white;
+  padding: 0px 3px;
+  border-radius: 3px;
+}
+.interaction-all .left,
+.interaction-all .right {
   clear: none;
+  display: inline-block;
+}
+.interaction-all .left {
+  max-width: 400px;
+}
+.interaction-all p {
+  text-align: left;
+}
+.interaction-all svg {
+  display: inline-block;
 }
 .interaction-all .horizon path {
   stroke: none;
