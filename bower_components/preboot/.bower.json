@@ -9,6 +9,5 @@
   },
   "_source": "git://github.com/mdo/preboot.git",
   "_target": "*",
-  "_originalSource": "preboot",
-  "_direct": true
+  "_originalSource": "preboot"
 }
